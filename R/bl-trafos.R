@@ -7,6 +7,7 @@
 #' @param ord (`integer(1L)`) Basis function degree.
 #' @return Sparse matrix containing the spline basis.
 #' @author Daniel S.
+#' @import compboostSplines
 #' @export
 trafoSpline = function(x, knots_min, knots_max, nknots = 20L, ord = 3L) {
   checkmate::assertNumeric(x = knots_min, len = 1L, any.missing = FALSE)

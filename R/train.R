@@ -93,7 +93,7 @@ transChar = function(x) {
     qchar = "\""
   }
 
-  if (is.null(char))
+  if (is.null(x))
     cchar = paste0(qchar, "NULL", qchar)
   else
     cchar = paste0(qchar, x, qchar)
@@ -110,6 +110,8 @@ transChar = function(x) {
 #'   Character containing the name of the target variable.
 #' @param feature_names (`character()`)\cr
 #'   Character vector of all target variables.
+#' @param mstop (`integer(1L)`)\cr
+#'   Number of boosting iterations.
 #' @param learning_rate (`numeric(1L)`)\cr
 #'   Learning rate.
 #' @param df (`numeric(1L)`)\cr
@@ -131,14 +133,16 @@ transChar = function(x) {
 #' @param seed (`numeric(1L)`)\cr
 #'   Seed for generating validation data (only applies when val_fraction is set).
 #' @return Client model of R6 class ClientModel.
+#' @importFrom DSI datashield.aggregate datashield.assign
 #' @export
-dsCWB = function(connections, symbol, target = NULL, feature_names, learning_rate = 0.1, df = 5, nknots = 20L,
+dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L, learning_rate = 0.1, df = 5, nknots = 20L,
   ord = 3L, derivs = 2L, val_fraction = NULL, patience = NULL, eps_for_break = NULL,
   positive = NULL, seed = NULL) {
 
   checkmate::assertCharacter(x = symbol, len = 1L, any.missing = FALSE)
   checkmate::assertCharacter(x = target, len = 1L, any.missing = FALSE)
   checkmate::assertCharacter(x = feature_names, any.missing = FALSE)
+  checkmate::assertCount(x = mstop, positive = TRUE)
   checkmate::assertNumeric(x = learning_rate, len = 1L, any.missing = FALSE)
   checkmate::assertNumeric(x = df, len = 1L, any.missing = FALSE)
   checkmate::assertIntegerish(x = nknots, len = 1L, any.missing = FALSE)
@@ -150,8 +154,9 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, learning_rat
   checkmate::assertCharacter(x = positive, len = 1L, any.missing = FALSE, null.ok = TRUE)
   checkmate::assertCount(x = seed)
 
-  #hm = HostModel$new(symbol, target, feature_names, learning_rate, df,
-    #nknots, ord, derivs, val_idx, positive)
+  hm = HostModel$new(symbol = symbol, target = target, feature_names = feature_names,
+    learning_rate = learning_rate, df = df, nknots = nknots, ord = ord, derivs = derivs,
+    positive = positive, connections = connections)
 
   tchar = transChar(target)
   fn = transChar(feature_names)
@@ -189,14 +194,15 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, learning_rat
 
   ll_xtx = aggregateXtX(xtxs)
 
-  # Create host model:
-  bm$setOffset(const_init)
+  # Init host model:
+  hm$setOffset(const_init)
   hm$addBaselearner(ll_init, ll_xtx)
   #hm$connect(connections)
 
   # Training the model:
   train_iter = TRUE
   risk_old = Inf
+  k = 1
   while (train_iter) {
     # Get Xty and SSEs from fitted site-specific effects from the ds servers:
     ll_xty = datashield.aggregate(connections, quote(getClientXty("cm")))
@@ -221,7 +227,11 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, learning_rat
     hm$log(names(min_sse), attr(min_sse, "effect_type"), min_sse, risk_train, risk_val)
 
     # Update model on ds servers if it was selected:
-    hm$update(bl_name, bl_param) # bl_param = NULL if site-specific effect
+    bl_param = NULL
+    if (names(min_sse) %in% names(ll_shared_effects_param))
+      bl_param = ll_shared_effects_param[[names(min_sse)]]
+
+    hm$update(names(min_sse), bl_param)
 
     # Determine stopping criteria:
     if (is.infinite(risk_old))
@@ -232,6 +242,7 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, learning_rat
     if ((k >= mstop) || (val_eps <= eps_for_break)) train_iter = FALSE
 
     risk_old = risk_train
+    k = k + 1
   }
   return(hm)
 

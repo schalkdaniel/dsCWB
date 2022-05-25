@@ -11,6 +11,7 @@
 #' @examples
 #' x = rnorm(20)
 #' xchar = parseParams(x)
+#' @export
 parseParams = function(x, sep = "/", digits = 22L) {
   checkmate::assertNumeric(x = x, any.missing = FALSE)
   checkmate::assertCharacter(x = sep, len = 1L, any.missing = FALSE)
@@ -37,6 +38,7 @@ parseParams = function(x, sep = "/", digits = 22L) {
 #' xchar = parseParams(x)
 #' xnew = deparseParams(xchar)
 #' all.equal(x, xnew)
+#' @export
 deparseParams = function(xchar, sep = "/") {
   checkmate::assertCharacter(x = xchar, len = 1L, any.missing = FALSE)
   checkmate::assertCharacter(x = sep, len = 1L, any.missing = FALSE)

@@ -27,6 +27,8 @@ LossQuadratic = R6Class("LossQuadratic",
 
     #' @description
     #' Get the constant initialization of the loss.
+    #' @param truth (`numeric()`)\cr
+    #'   Response vector.
     init = function(truth) {
       checkmate::assertNumeric(truth, any.missing = FALSE)
       return(mean(truth))
@@ -79,10 +81,12 @@ LossQuadratic = R6Class("LossQuadratic",
 
     #' @description
     #' Aggregate initializations.
-    #' @param inits (`list()`)\cr
+    #' @param ll_inits (`list()`)\cr
     #'   List with initialization values.
     aggregateInit = function(ll_inits) {
       checkmate::assertList(ll_inits)
+      n = length(ll_inits[[1]])
+      nuisance = lapply(ll_inits, checkmate::assertNumeric, len = n, any.missing = FALSE)
       return(Reduce("+", ll_inits))
     }
   )

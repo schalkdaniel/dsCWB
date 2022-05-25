@@ -13,13 +13,12 @@ Depends:
     R (>= 3.1.0)
 Imports:
     DSI,
-    DSOpal,
     checkmate,
-    stringr,
-    digest,
+    R6,
     Matrix,
-    R6
+    compboostSplines
 Suggests:
+    DSOpal,
     ggplot2,
     testthat,
     opalr

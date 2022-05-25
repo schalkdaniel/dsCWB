@@ -35,6 +35,8 @@ createClientModel = function(symbol, target, feature_names = NULL, learning_rate
 #' @title Initialize the site base learner.
 #' @param model_symbol (`character(1L)`)\cr
 #'   The name of the model at the server.
+#' @param ll_init_binary (`character(1L)`)\cr
+#'   Binary encoded list of initializatino values.
 #' @export
 initClientModel = function(model_symbol, ll_init_binary) {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)

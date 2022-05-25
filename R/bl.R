@@ -122,10 +122,10 @@ BlSpline = R6Class("BlSpline",
 
     #' @description
     #' Get Xty.
-    #' @param (`numeric()`)\cr
+    #' @param y (`numeric()`)\cr
     #'   y variable which is multiplied with X
     #' @param type (`character(1L)`)\cr
-    #'   Type which target shold be returned. Choices are
+    #'   Type which target should be returned. Choices are
     #'   `full` (for the whole vector), `train` (for the vector used for training),
     #'   and `val` (for the validation vector).
     getXty = function(y, type = "full") {
@@ -169,6 +169,10 @@ BlSpline = R6Class("BlSpline",
     #' @param par (`numeric()`)\cr
     #'   Parameter vector used for predicting on the data set
     #'   in design. If `NULL`, the internal parameter vector is used.
+    #' @param type (`character(1L)`)\cr
+    #'   Type which predictions should be returned. Choices are
+    #'   `full` (for the whole vector), `train` (for the vector used for training),
+    #'   and `val` (for the validation vector).
     predict = function(par = NULL, type = "full") {
       checkmate::assertNumeric(par, len = ncol(private$p_xtx), null.ok = TRUE)
 
@@ -197,7 +201,7 @@ BlSpline = R6Class("BlSpline",
       if (is.null(x)) stop("Feature \"", private$p_feature, "\" was not found in ", newdata)
 
       design = trafoSpline(x, private$p_knots_min, private$p_knots_max,
-        private$p_nknots, private$p_ord, private$p_derivs)
+        private$p_nknots, private$p_ord)
 
       if (is.null(par)) {
         out = design %*% private$p_param

@@ -13,10 +13,12 @@ predictions, fitting parameters, etc.
 \item \href{#method-new}{\code{BlSpline$new()}}
 \item \href{#method-initData}{\code{BlSpline$initData()}}
 \item \href{#method-initDataXtX}{\code{BlSpline$initDataXtX()}}
+\item \href{#method-initEmpty}{\code{BlSpline$initEmpty()}}
+\item \href{#method-getXtX}{\code{BlSpline$getXtX()}}
+\item \href{#method-getXty}{\code{BlSpline$getXty()}}
 \item \href{#method-train}{\code{BlSpline$train()}}
 \item \href{#method-predict}{\code{BlSpline$predict()}}
 \item \href{#method-predictNewdata}{\code{BlSpline$predictNewdata()}}
-\item \href{#method-predictVal}{\code{BlSpline$predictVal()}}
 \item \href{#method-updateParam}{\code{BlSpline$updateParam()}}
 \item \href{#method-getKnotRange}{\code{BlSpline$getKnotRange()}}
 \item \href{#method-getFeature}{\code{BlSpline$getFeature()}}
@@ -38,10 +40,10 @@ Creates a new instance of this [R6][R6::R6Class] class.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{knots_min}}{(`numeric(1L)`)\cr
-Minimum number of inner knots.}
+Minimum value of inner knots.}
 
 \item{\code{knots_max}}{(`numeric(1L)`)\cr
-Maximum number of inner knots.}
+Maximum value of inner knots.}
 
 \item{\code{nknots}}{(`integer(1L)`)\cr
 Number of inner knots.}
@@ -109,13 +111,71 @@ Hat matrix used for parameter estimation.}
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-initEmpty"></a>}}
+\if{latex}{\out{\hypertarget{method-initEmpty}{}}}
+\subsection{Method \code{initEmpty()}}{
+Initializes an empty base learner. This one can be used for
+simple predictions without data in it.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{BlSpline$initEmpty(feature, df = NULL, penalty = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{feature}}{(`character(1L)`)\cr
+Character containing the name of the feature.}
+
+\item{\code{df}}{(`numeric(1L)`)\cr
+Value indicating the degrees of freedom for the base learner.}
+
+\item{\code{penalty}}{(`numeric(1L)`)\cr
+Set the penalty (just for information, has no effect).}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getXtX"></a>}}
+\if{latex}{\out{\hypertarget{method-getXtX}{}}}
+\subsection{Method \code{getXtX()}}{
+Get XtX.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{BlSpline$getXtX()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getXty"></a>}}
+\if{latex}{\out{\hypertarget{method-getXty}{}}}
+\subsection{Method \code{getXty()}}{
+Get Xty.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{BlSpline$getXty(y, type = "full")}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{y}}{(`numeric()`)\cr
+y variable which is multiplied with X}
+
+\item{\code{type}}{(`character(1L)`)\cr
+Type which target should be returned. Choices are
+`full` (for the whole vector), `train` (for the vector used for training),
+and `val` (for the validation vector).}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-train"></a>}}
 \if{latex}{\out{\hypertarget{method-train}{}}}
 \subsection{Method \code{train()}}{
 Calculate parameter estimates based on
 be used at the host.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{BlSpline$train(y, xty = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{BlSpline$train(y = NULL, xty = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -136,7 +196,7 @@ Hat matrix used for parameter estimation.}
 \subsection{Method \code{predict()}}{
 Calculate prediction based on a parameter vector.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{BlSpline$predict(par = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{BlSpline$predict(par = NULL, type = "full")}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -145,6 +205,11 @@ Calculate prediction based on a parameter vector.
 \item{\code{par}}{(`numeric()`)\cr
 Parameter vector used for predicting on the data set
 in design. If `NULL`, the internal parameter vector is used.}
+
+\item{\code{type}}{(`character(1L)`)\cr
+Type which predictions should be returned. Choices are
+`full` (for the whole vector), `train` (for the vector used for training),
+and `val` (for the validation vector).}
 }
 \if{html}{\out{</div>}}
 }
@@ -166,27 +231,6 @@ New data. Note that `newdata` must contain the feature.}
 
 \item{\code{par}}{(`numeric()`)\cr
 Parameter vector used for predicting on new data.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-predictVal"></a>}}
-\if{latex}{\out{\hypertarget{method-predictVal}{}}}
-\subsection{Method \code{predictVal()}}{
-Calculate prediction for the validation data based on a
-parameter vector.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{BlSpline$predictVal(par = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{par}}{(`numeric()`)\cr
-Parameter vector used for predicting on the data set
-in validation design. If `NULL`, the internal parameter
-vector is used.}
 }
 \if{html}{\out{</div>}}
 }

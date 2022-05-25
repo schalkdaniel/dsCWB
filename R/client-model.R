@@ -27,6 +27,12 @@ ClientModel = R6Class("ClientModel",
     #'   Polynomial degree of basis functions.
     #' @param derivs (`integer(1L)`)\cr
     #'   Number of penalized differences.
+    #' @param val_fraction (`numeric(1L)`)\cr
+    #'   Fraction of observations used for validation.
+    #' @param positive (`integer(1L)`)\cr
+    #'   Character indicating the positive class in the binary classification setting.
+    #' @param seed (`integer(1L)`)\cr
+    #'   Seed used for drawing the validation data.
     initialize = function(symbol = "D", target, feature_names = NULL, learning_rate, df = 5L,
       nknots = 20L, ord = 3L, derivs = 2L, val_fraction = NULL, positive = NULL, seed = NULL) {
 
@@ -280,17 +286,19 @@ ClientModel = R6Class("ClientModel",
     }
   ),
   active = list(
+    #' @field loss (`Loss`)\cr
+    #'   Loss object used for modelling.
     loss = function(x) {
       if (! missing(x)) stop("`baselearner_list` is read only.")
       return(private$p_loss)
     }
   ),
   private = list(
-    #' @description
-    #' Get feature from the data from the symbol.
-    #'
-    #' @param feature (`character(1L)`)\cr
-    #'   Character containing the feature name.
+    # @description
+    # Get feature from the data from the symbol.
+    #
+    # @param feature (`character(1L)`)\cr
+    #   Character containing the feature name.
     getFeatureFromData = function(feature) {
       checkmate::assertCharacter(x = feature, len = 1L, any.missing = FALSE)
       x = eval(parse(text = paste0(private$p_symbol, "[[\"", feature, "\"]]")), envir = .GlobalEnv)
@@ -298,12 +306,12 @@ ClientModel = R6Class("ClientModel",
       return(x)
     },
 
-    #' @description
-    #' Get target from the data from the symbol.
-    #' @param type (`character(1L)`)\cr
-    #'   Type which target shold be returned. Choices are
-    #'   `full` (for the whole vector), `train` (for the vector used for training),
-    #'   and `val` (for the validation vector).
+    # @description
+    # Get target from the data from the symbol.
+    # @param type (`character(1L)`)\cr
+    #   Type which target shold be returned. Choices are
+    #   `full` (for the whole vector), `train` (for the vector used for training),
+    #   and `val` (for the validation vector).
     getTargetRaw = function(type = "full") {
       checkmate::assertChoice(type, c("full", "train", "val"))
       if (type == "full") return(private$getFeatureFromData(private$p_target))
@@ -312,17 +320,17 @@ ClientModel = R6Class("ClientModel",
     },
 
 
-    #' @description
-    #' Add a numeric base learner.
-    #'
-    #' @param feature (`character(1L)`)\cr
-    #'   Character containing the feature name.
-    #' @param blname (`character(1L)`)\cr
-    #'   Base learner name (id used for references).
-    #' @param knots_min (`numeric(1L)`)\cr
-    #'   Minimum value of inner knots.
-    #' @param knots_max (`numeric(1L)`)\cr
-    #'   Maximum value of inner knots.
+    # @description
+    # Add a numeric base learner.
+    #
+    # @param feature (`character(1L)`)\cr
+    #   Character containing the feature name.
+    # @param blname (`character(1L)`)\cr
+    #   Base learner name (id used for references).
+    # @param knots_min (`numeric(1L)`)\cr
+    #   Minimum value of inner knots.
+    # @param knots_max (`numeric(1L)`)\cr
+    #   Maximum value of inner knots.
     addBlNumeric = function(feature, blname, knots_min, knots_max) {
       checkmate::assertCharacter(x = feature, len = 1L, any.missing = FALSE)
       checkmate::assertNumeric(x = knots_min, len = 1L, null.ok = FALSE)
