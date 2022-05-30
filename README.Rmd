@@ -37,7 +37,7 @@ if (! check2)
   stop("[", Sys.time(), "] Was not able to publish methods of ", pkg, "!")
 ```
 
-[![Actions Status](https://github.com/schalkdaniel/dsCWB/workflows/R-CMD-check/badge.svg)](https://github.com/schalkdaniel/dsCWB/actions) [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0) [![codecov](https://codecov.io/gh/schalkdaniel/dsCWB/branch/main/graph/badge.svg?token=E8AZRM6XJX)](https://codecov.io/gh/schalkdaniel/dsCWB)
+[![Actions Status](https://github.com/schalkdaniel/dsCWB/workflows/R-CMD-check/badge.svg)](https://github.com/schalkdaniel/dsCWB/actions) [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0) [![codecov](https://codecov.io/gh/schalkdaniel/dsCWB/branch/main/graph/badge.svg?token=0K9P2WBKNH)](https://codecov.io/gh/schalkdaniel/dsCWB)
 
 # Component-wise boosting for DataSHIELD
 
