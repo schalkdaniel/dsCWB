@@ -8,6 +8,7 @@ output: github_document
 options(width = 80)
 
 knitr::opts_chunk$set(
+  eval = FALSE,
   collapse = TRUE,
   comment = "#>",
   fig.path = "Readme_files/"
@@ -27,16 +28,13 @@ password = "password"
 
 opal = opalr::opal.login(username = username, password = password, url = surl)
 
-pkgs = c("dsPredictBase", "dsROCGLM")
-for (pkg in pkgs) {
-  check1 = opalr::dsadmin.install_github_package(opal = opal, pkg = pkg, username = "difuture-lmu")
-  if (! check1)
-    stop("[", Sys.time(), "] Was not able to install ", pkg, "!")
+check1 = opalr::dsadmin.install_github_package(opal = opal, pkg = "dsCWB", username = "schalkdaniel", ref = "main")
+if (! check1)
+  stop("[", Sys.time(), "] Was not able to install ", pkg, "!")
 
-  check2 = opalr::dsadmin.publish_package(opal = opal, pkg = pkg)
-  if (! check2)
-    stop("[", Sys.time(), "] Was not able to publish methods of ", pkg, "!")
-}
+check2 = opalr::dsadmin.publish_package(opal = opal, pkg = pkg)
+if (! check2)
+  stop("[", Sys.time(), "] Was not able to publish methods of ", pkg, "!")
 ```
 
 [![Actions Status](https://github.com/schalkdaniel/dsCWB/workflows/R-CMD-check/badge.svg)](https://github.com/schalkdaniel/dsCWB/actions) [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0) [![codecov](https://codecov.io/gh/schalkdaniel/dsCWB/branch/main/graph/badge.svg?token=E8AZRM6XJX)](https://codecov.io/gh/schalkdaniel/dsCWB)
@@ -60,94 +58,6 @@ It is necessary to register the assign and aggregate methods in the OPAL adminis
 
 Note that the package needs to be installed at both locations, the server and the analysts machine.
 
-## Usage
-
-A more sophisticated example is available [here](github.com/difuture-lmu/datashield-roc-glm-demo).
-
-```{r}
-library(DSI)
-library(DSOpal)
-library(dsBaseClient)
-
-library(dsPredictBase)
-library(dsROCGLM)
-```
-
-#### Log into DataSHIELD server
-
-```{r}
-builder = newDSLoginBuilder()
-
-surl     = "https://opal-demo.obiba.org/"
-username = "administrator"
-password = "password"
-
-builder$append(
-  server   = "ds1",
-  url      = surl,
-  user     = username,
-  password = password
-)
-builder$append(
-  server   = "ds2",
-  url      = surl,
-  user     = username,
-  password = password
-)
-
-connections = datashield.login(logins = builder$build(), assign = TRUE)
-```
-
-#### Assign iris and validation vector at DataSHIELD (just for testing)
-
-```{r}
-datashield.assign(connections, "iris", quote(iris))
-datashield.assign(connections, "y", quote(c(rep(1, 50), rep(0, 100))))
-```
-
-#### Load test model, push to DataSHIELD, and calculate predictions
-
-```{r}
-# Model predicts if species of iris is setosa or not.
-iris$y = ifelse(iris$Species == "setosa", 1, 0)
-mod = glm(y ~ Sepal.Length, data = iris, family = binomial())
-
-# Push the model to the DataSHIELD servers using `dsPredictBase`:
-pushObject(connections, mod)
-
-# Calculate scores and save at the servers using `dsPredictBase`:
-pfun =  "predict(mod, newdata = D, type = 'response')"
-predictModel(connections, mod, "pred", "iris", predict_fun = pfun)
-
-datashield.symbols(connections)
-```
-
-#### Calculate l2-sensitivity
-
-```{r}
-# In order to securely calculate the ROC-GLM, we have to assess the
-# l2-sensitivity to set the privacy parameters of differential
-# privacy adequately:
-l2s = dsL2Sens(connections, "iris", "pred")
-l2s
-
-# Due to the results presented in https://arxiv.org/abs/2203.10828, we set the privacy parameters to
-# - epsilon = 0.2, delta = 0.1 if i      l2s <= 0.01
-# - epsilon = 0.3, delta = 0.4 if 0.01 < l2s <= 0.03
-# - epsilon = 0.5, delta = 0.3 if 0.03 < l2s <= 0.05
-# - epsilon = 0.5, delta = 0.5 if 0.05 < l2s <= 0.07
-# - epsilon = 0.5, delta = 0.5 if 0.07 < l2s BUT results may be not good!
-```
-
-#### Calculate ROC-GLM
-
-```{r}
-roc_glm = dsROCGLM(connections, truth_name = "y", pred_name = "pred",
-  dat_name = "iris", seed_object = "y")
-roc_glm
-
-plot(roc_glm)
-```
 
 ## Deploy information:
 
