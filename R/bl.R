@@ -38,6 +38,16 @@ BlSpline = R6Class("BlSpline",
     },
 
     #' @description
+    #' Calculates the basis transformation of the base learner.
+    #' @param x (`numeric()`)\cr
+    #'   Data vector.
+    basisTrafo = function(x) {
+      checkmate::assertNumeric(x, any.missing = FALSE)
+      return(trafoSpline(x, private$p_knots_min, private$p_knots_max,
+        private$p_nknots, private$p_ord))
+    },
+
+    #' @description
     #' Initializes data based on given data. This function should
     #' be used at the sites.
     #'
@@ -49,9 +59,12 @@ BlSpline = R6Class("BlSpline",
     #'   Value indicating the degrees of freedom for the base learner.
     #' @param val_idx (`integer()`)\cr
     #'   Vector containing the indices used for validation.
-    initData = function(x, feature, df, val_idx = NULL) {
+    #' @param pen (`numeric(1L)`)\cr
+    #'   Penalty term for the base learner. If set, df is ignored.
+    initData = function(x, feature, df, val_idx = NULL, pen = NULL) {
       checkmate::assertNumeric(x = x, any.missing = FALSE)
       checkmate::assertCharacter(x = feature, len = 1L)
+      checkmate::assertNumeric(x = df, any.missing = FALSE, len = 1L)
 
       #x = eval(parse(text = paste0(symbol, "[[\"", feature, "\"]]")))
       #if (is.null(x)) stop("Feature \"", feature, "\" was not found in ", symbol)
@@ -68,7 +81,12 @@ BlSpline = R6Class("BlSpline",
 
       private$p_xtx     = t(private$p_design[train_idx, ]) %*% private$p_design[train_idx, ]
       private$p_penmat  = compboostSplines::penaltyMat(ncol(private$p_design), private$p_derivs)
-      private$p_penalty = compboostSplines::demmlerReinsch(as.matrix(private$p_xtx), private$p_penmat, private$p_df)
+
+      if (is.null(pen))
+        private$p_penalty = compboostSplines::demmlerReinsch(as.matrix(private$p_xtx), private$p_penmat, private$p_df)
+      else
+        private$p_penalty = pen
+
       private$p_xtx_inv = solve(private$p_xtx + private$p_penalty * private$p_penmat)
     },
 
@@ -121,6 +139,12 @@ BlSpline = R6Class("BlSpline",
     },
 
     #' @description
+    #' Get penalty matrix.
+    getPenaltyMat = function() {
+      return(private$p_penmat)
+    },
+
+    #' @description
     #' Get Xty.
     #' @param y (`numeric()`)\cr
     #'   y variable which is multiplied with X
@@ -145,9 +169,9 @@ BlSpline = R6Class("BlSpline",
     #' be used at the host.
     #'
     #' @param y (`numeric(1L)`)\cr
-    #'   Value indicating the degrees of freedom for the base learner.
+    #'   Response vector.
     #' @param xty (`matrix()|numeric()`)\cr
-    #'   Hat matrix used for parameter estimation.
+    #'   X^t y with X design matrix and y response vector.
     train = function(y = NULL, xty = NULL) {
       checkmate::assertNumeric(x = y, len = length(private$p_train_idx), any.missing = FALSE, null.ok = TRUE)
       checkmate::assertNumeric(x = xty, len = ncol(private$p_xty_inv), any.missing = FALSE, null.ok = TRUE)

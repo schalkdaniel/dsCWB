@@ -23,7 +23,7 @@ aggregateInit = function(ll_init) {
 
 aggregateXtX = function(xtxs) {
   ss = names(xtxs)
-  fn = names(xtxs[[1]])
+ fn = names(xtxs[[1]])
   ll_out = list()
   for (f in fn) {
     xtx = 0
@@ -135,9 +135,9 @@ transChar = function(x) {
 #' @return Client model of R6 class ClientModel.
 #' @importFrom DSI datashield.aggregate datashield.assign
 #' @export
-dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L, learning_rate = 0.1, df = 5, nknots = 20L,
-  ord = 3L, derivs = 2L, val_fraction = NULL, patience = NULL, eps_for_break = NULL,
-  positive = NULL, seed = NULL) {
+dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L,
+  learning_rate = 0.1, df = 5, nknots = 20L, ord = 3L, derivs = 2L, val_fraction = NULL,
+  patience = NULL, eps_for_break = NULL, positive = NULL, seed = NULL) {
 
   checkmate::assertCharacter(x = symbol, len = 1L, any.missing = FALSE)
   checkmate::assertCharacter(x = target, len = 1L, any.missing = FALSE)

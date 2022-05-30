@@ -1,3 +1,16 @@
+#' @title Check if symbol is present in global envir.
+#' @param symbol (`character(1L)`)\cr
+#'   Symbol specifying something.
+#' @export
+checkSymbol = function(symbol) {
+  checkmate::assertCharacter(symbol, len = 1L, any.missing = FALSE)
+  fss = ls(envir = .GlobalEnv)
+  e = try(eval(parse(text = symbol), envir = .GlobalEnv), silent = TRUE)
+  if (inherits(e, "try-error"))
+    stop("Cannot find symbol ", symbol, " in .GlobalEnv")
+}
+
+
 #' @title Paste a numeric vector into a character vector
 #' @description
 #'   Converts a numerical vector into one string with the values separated

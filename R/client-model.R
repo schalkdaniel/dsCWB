@@ -36,6 +36,8 @@ ClientModel = R6Class("ClientModel",
     initialize = function(symbol = "D", target, feature_names = NULL, learning_rate, df = 5L,
       nknots = 20L, ord = 3L, derivs = 2L, val_fraction = NULL, positive = NULL, seed = NULL) {
 
+      checkSymbol(symbol)
+
       checkmate::assertCharacter(x = symbol, len = 1L, any.missing = FALSE)
       checkmate::assertCharacter(x = target, len = 1L, any.missing = FALSE)
       checkmate::assertCharacter(x = feature_names, any.missing = FALSE, null.ok = TRUE)
@@ -54,6 +56,8 @@ ClientModel = R6Class("ClientModel",
       if (! is.null(val_fraction)) {
         if (! is.null(seed)) set.seed(seed)
         val_idx = sample(seq_len(n), ceiling(n * val_fraction))
+      } else {
+        val_idx = NULL
       }
 
       private$p_n = n
@@ -100,7 +104,9 @@ ClientModel = R6Class("ClientModel",
     #' @param const (`numeric(1L)`)\cr
     #'    Loss optimal constant.
     initConstantModel = function(const) {
+      if (! is.null(private$p_prediction)) stop("Model already initialized")
       checkmate::assertNumeric(x = const, len = 1L, any.missing = FALSE)
+      private$p_offset = const
       private$p_prediction = const
       private$p_pseudo_resids = private$p_loss$pseudoResids(self$getTarget(), const)
     },
@@ -153,6 +159,8 @@ ClientModel = R6Class("ClientModel",
     #'   and `val` (for the validation vector).
     getRisk = function(type = "train") {
       checkmate::assertChoice(type, c("full", "train", "val"))
+      if (is.null(self$getPrediction(type)))
+        stop("Prediction must be initialized to calculate risk.")
       return(private$p_loss$risk(self$getTarget(type), self$getPrediction(type)))
     },
 
@@ -269,6 +277,11 @@ ClientModel = R6Class("ClientModel",
       if (type == "val") return(pred[private$p_val_idx])
     },
 
+    #' @description
+    #' Return offset of the model.
+    getOffset = function() {
+      return(private$p_offset)
+    },
 
     #' @description
     #' Get target from the data from the symbol.
@@ -289,8 +302,15 @@ ClientModel = R6Class("ClientModel",
     #' @field loss (`Loss`)\cr
     #'   Loss object used for modelling.
     loss = function(x) {
-      if (! missing(x)) stop("`baselearner_list` is read only.")
+      if (! missing(x)) stop("`loss` is read only.")
       return(private$p_loss)
+    },
+
+    #' @field bls (`list(Baselearner)`)\cr
+    #'   List of base learner.
+    bls = function(x) {
+      if (! missing(x)) stop("`bls` is read only.")
+      return(private$p_bls)
     }
   ),
   private = list(
@@ -331,7 +351,7 @@ ClientModel = R6Class("ClientModel",
     #   Minimum value of inner knots.
     # @param knots_max (`numeric(1L)`)\cr
     #   Maximum value of inner knots.
-    addBlNumeric = function(feature, blname, knots_min, knots_max) {
+    addBlNumeric = function(feature, blname, knots_min, knots_max, df = NULL) {
       checkmate::assertCharacter(x = feature, len = 1L, any.missing = FALSE)
       checkmate::assertNumeric(x = knots_min, len = 1L, null.ok = FALSE)
       checkmate::assertNumeric(x = knots_max, len = 1L, null.ok = FALSE)
@@ -357,6 +377,7 @@ ClientModel = R6Class("ClientModel",
     p_bls = NULL,
     p_pseudo_resids = NULL,
     p_prediction = NULL,
+    p_offset = NULL,
     p_task = NULL,
     p_positve = NULL,
     p_loss = NULL
