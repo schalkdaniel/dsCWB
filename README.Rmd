@@ -69,8 +69,8 @@ This readme is built automatically after each push to the repository. Hence, it 
 ```{r, include=FALSE}
 ri_l  = sessionInfo()
 ri_ds = datashield.aggregate(connections, quote(getDataSHIELDInfo()))
-client_pkgs = c("DSI", "DSOpal", "dsBaseClient", "dsPredictBase", "dsROCGLM")
-remote_pkgs = c("dsBase", "resourcer", "dsPredictBase", "dsROCGLM")
+client_pkgs = c("DSI", "DSOpal", "dsBaseClient", "dsCWB")
+remote_pkgs = c("dsBase", "resourcer", "dsCWB")
 ```
 
 - Local machine:
