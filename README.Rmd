@@ -61,49 +61,4 @@ It is necessary to register the assign and aggregate methods in the OPAL adminis
 Note that the package needs to be installed at both locations, the server and the analysts machine.
 
 
-## Deploy information:
-
-__Build by `r Sys.info()[["login"]]` (`r Sys.info()[["sysname"]]`) on `r as.character(Sys.time())`.__
-
-This readme is built automatically after each push to the repository. Hence, it also is a test if the functionality of the package works also on the DataSHIELD servers. We also test these functionality in `tests/testthat/test_on_active_server.R`. The system information of the local and remote servers are as followed:
-
-
-```{r, include=FALSE}
-ri_l  = sessionInfo()
-ri_ds = datashield.aggregate(connections, quote(getDataSHIELDInfo()))
-client_pkgs = c("DSI", "DSOpal", "dsBaseClient", "dsCWB")
-remote_pkgs = c("dsBase", "resourcer", "dsCWB")
-```
-
-- Local machine:
-    - `R` version: `r ri_l$R.version$version.string`
-    - Version of DataSHELD client packages:
-
-
-```{r, echo=FALSE}
-dfv = installed.packages()[client_pkgs, ]
-dfv = data.frame(Package = rownames(dfv), Version = unname(dfv[, "Version"]))
-knitr::kable(dfv)
-```
-
-- Remote DataSHIELD machines:
-    - `R` version of `r names(ri_ds)[1]`: `r ri_ds[[1]]$session$R.version$version.string`
-    - `R` version of `r names(ri_ds)[2]`: `r ri_ds[[2]]$session$R.version$version.string`
-    - Version of server packages:
-
-
-```{r, echo=FALSE}
-dfv = do.call(cbind, lapply(names(ri_ds), function(nm) {
-  out = ri_ds[[nm]]$pcks[remote_pkgs, "Version", drop = FALSE]
-  colnames(out) = paste0(nm, ": ", colnames(out))
-  as.data.frame(out)
-}))
-dfv = cbind(Package = rownames(dfv), dfv)
-rownames(dfv) = NULL
-knitr::kable(dfv)
-```
-
-```{r, include=FALSE}
-datashield.logout(connections)
-```
 
