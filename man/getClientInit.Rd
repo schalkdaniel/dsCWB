@@ -4,14 +4,14 @@
 \alias{getClientInit}
 \title{Get base learner initialization}
 \usage{
-getClientInit(symbol, feature_names)
+getClientInit(symbol, fn_binary)
 }
 \arguments{
 \item{symbol}{(`character(1L)`)\cr
 Character containing the name of the data.}
 
-\item{feature_names}{(`character()`)\cr
-Character vector of all target variables.}
+\item{fn_binary}{(`character(1L)`)\cr
+Binary encoded character vector of all target variables.}
 }
 \value{
 List with initialization values.

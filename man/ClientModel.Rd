@@ -13,6 +13,9 @@ pseudo residuals, loss function, etc.) per site.
 \describe{
 \item{\code{loss}}{(`Loss`)\cr
 Loss object used for modelling.}
+
+\item{\code{bls}}{(`list(Baselearner)`)\cr
+List of base learner.}
 }
 \if{html}{\out{</div>}}
 }
@@ -34,6 +37,7 @@ Loss object used for modelling.}
 \item \href{#method-addBaselearner}{\code{ClientModel$addBaselearner()}}
 \item \href{#method-getFeatureNames}{\code{ClientModel$getFeatureNames()}}
 \item \href{#method-getPrediction}{\code{ClientModel$getPrediction()}}
+\item \href{#method-getOffset}{\code{ClientModel$getOffset()}}
 \item \href{#method-getTarget}{\code{ClientModel$getTarget()}}
 \item \href{#method-clone}{\code{ClientModel$clone()}}
 }
@@ -320,6 +324,16 @@ and `val` (for the validation vector).}
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getOffset"></a>}}
+\if{latex}{\out{\hypertarget{method-getOffset}{}}}
+\subsection{Method \code{getOffset()}}{
+Return offset of the model.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ClientModel$getOffset()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getTarget"></a>}}

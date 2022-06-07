@@ -11,10 +11,12 @@ predictions, fitting parameters, etc.
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-new}{\code{BlSpline$new()}}
+\item \href{#method-basisTrafo}{\code{BlSpline$basisTrafo()}}
 \item \href{#method-initData}{\code{BlSpline$initData()}}
 \item \href{#method-initDataXtX}{\code{BlSpline$initDataXtX()}}
 \item \href{#method-initEmpty}{\code{BlSpline$initEmpty()}}
 \item \href{#method-getXtX}{\code{BlSpline$getXtX()}}
+\item \href{#method-getPenaltyMat}{\code{BlSpline$getPenaltyMat()}}
 \item \href{#method-getXty}{\code{BlSpline$getXty()}}
 \item \href{#method-train}{\code{BlSpline$train()}}
 \item \href{#method-predict}{\code{BlSpline$predict()}}
@@ -58,13 +60,31 @@ Number of penalized differences.}
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-basisTrafo"></a>}}
+\if{latex}{\out{\hypertarget{method-basisTrafo}{}}}
+\subsection{Method \code{basisTrafo()}}{
+Calculates the basis transformation of the base learner.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{BlSpline$basisTrafo(x)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{x}}{(`numeric()`)\cr
+Data vector.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-initData"></a>}}
 \if{latex}{\out{\hypertarget{method-initData}{}}}
 \subsection{Method \code{initData()}}{
 Initializes data based on given data. This function should
 be used at the sites.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{BlSpline$initData(x, feature, df, val_idx = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{BlSpline$initData(x, feature, df, val_idx = NULL, pen = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -81,6 +101,9 @@ Value indicating the degrees of freedom for the base learner.}
 
 \item{\code{val_idx}}{(`integer()`)\cr
 Vector containing the indices used for validation.}
+
+\item{\code{pen}}{(`numeric(1L)`)\cr
+Penalty term for the base learner. If set, df is ignored.}
 }
 \if{html}{\out{</div>}}
 }
@@ -146,6 +169,16 @@ Get XtX.
 
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getPenaltyMat"></a>}}
+\if{latex}{\out{\hypertarget{method-getPenaltyMat}{}}}
+\subsection{Method \code{getPenaltyMat()}}{
+Get penalty matrix.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{BlSpline$getPenaltyMat()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-getXty"></a>}}
 \if{latex}{\out{\hypertarget{method-getXty}{}}}
 \subsection{Method \code{getXty()}}{
@@ -182,10 +215,10 @@ be used at the host.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{y}}{(`numeric(1L)`)\cr
-Value indicating the degrees of freedom for the base learner.}
+Response vector.}
 
 \item{\code{xty}}{(`matrix()|numeric()`)\cr
-Hat matrix used for parameter estimation.}
+X^t y with X design matrix and y response vector.}
 }
 \if{html}{\out{</div>}}
 }

@@ -11,7 +11,7 @@ initClientModel(model_symbol, ll_init_binary)
 The name of the model at the server.}
 
 \item{ll_init_binary}{(`character(1L)`)\cr
-Binary encoded list of initializatino values.}
+Binary encoded list of initialization values.}
 }
 \description{
 Initialize the site base learner.

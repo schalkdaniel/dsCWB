@@ -1,7 +1,9 @@
 context("Client model")
 
-#library(testthat)
-#devtools::load_all()
+q()
+R
+library(testthat)
+devtools::load_all()
 
 test_that("client model can be initialized correctly",  {
   symbol = "iris"
@@ -99,11 +101,11 @@ test_that("client model generation works on DataSHIELD server", {
     datashield.assign(connections, "dat", quote(iris))
     expect_silent(suppressMessages(datashield.assign(connections, "cm", quote(createClientModel("dat", "Petal.Length")))))
 
-    datashield.symbols(connections)
+    expect_true("cm" %in% datashield.symbols(connections)[[1]])
 
     fn = datashield.aggregate(connections, quote(getFeatureNames("cm")))
     fns = c("Species", "Sepal.Length", "Sepal.Width", "Petal.Width")
-    call_get_init = paste0("getClientInit(\"dat\", ", encodeObject(fns), ")")
+    call_get_init = paste0("getClientInit(\"dat\", \"", encodeObject(fns), "\")")
     cl_init = datashield.aggregate(connections, call_get_init)
 
     call_init = paste0("initClientModel(\"cm\", ", encodeObject(cl_init), ")")

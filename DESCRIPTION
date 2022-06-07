@@ -29,7 +29,8 @@ AggregateMethods:
     getClientXtX,
     getClientXty,
     getClientSSE,
-    getRisk
+    getRisk,
+    getFeatureNames
 AssignMethods:
     createClientModel,
     initClientModel

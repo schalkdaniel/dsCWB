@@ -137,13 +137,14 @@ getClientInit = function(symbol, fn_binary) {
 
   feature_names = decodeBinary(fn_binary)
   checkmate::assertCharacter(feature_names, any.missing = FALSE)
+
   dat = eval(parse(text = symbol), envir = .GlobalEnv)
   ll_out = lapply(feature_names, function(ff) {
     if (is.numeric(dat[[ff]])) {
-      ll_out[[ff]] = list(class = "numeric", min = min(dat[[ff]]), max = max(dat[[ff]]))
+      return(list(class = "numeric", min = min(dat[[ff]]), max = max(dat[[ff]])))
     }
     if (is.factor(dat[[ff]]) || is.character(dat[[ff]])) {
-      ll_out[[ff]] = list(class = "categorical", table = as.character(unique(dat[[ff]])))
+      return(list(class = "categorical", table = as.character(unique(dat[[ff]]))))
     }
   })
   #ll_out = list()
