@@ -126,23 +126,35 @@ updateClientBaselearner = function(model_symbol, blname, par_binary = NULL) {
 #' @title Get base learner initialization
 #' @param symbol (`character(1L)`)\cr
 #'   Character containing the name of the data.
-#' @param feature_names (`character()`)\cr
-#'   Character vector of all target variables.
+#' @param fn_binary (`character(1L)`)\cr
+#'   Binary encoded character vector of all target variables.
 #' @return List with initialization values.
 #' @export
-getClientInit = function(symbol, feature_names) {
+getClientInit = function(symbol, fn_binary) {
+
   checkmate::assertCharacter(symbol, len = 1L, any.missing = FALSE)
+  checkmate::assertCharacter(fn_binary, len = 1L, any.missing = FALSE)
+
+  feature_names = decodeBinary(fn_binary)
   checkmate::assertCharacter(feature_names, any.missing = FALSE)
   dat = eval(parse(text = symbol), envir = .GlobalEnv)
-  ll_out = list()
-  for (ff in feature_names) {
+  ll_out = lapply(feature_names, function(ff) {
     if (is.numeric(dat[[ff]])) {
       ll_out[[ff]] = list(class = "numeric", min = min(dat[[ff]]), max = max(dat[[ff]]))
     }
     if (is.factor(dat[[ff]]) || is.character(dat[[ff]])) {
       ll_out[[ff]] = list(class = "categorical", table = as.character(unique(dat[[ff]])))
     }
-  }
+  })
+  #ll_out = list()
+  #for (ff in feature_names) {
+    #if (is.numeric(dat[[ff]])) {
+      #ll_out[[ff]] = list(class = "numeric", min = min(dat[[ff]]), max = max(dat[[ff]]))
+    #}
+    #if (is.factor(dat[[ff]]) || is.character(dat[[ff]])) {
+      #ll_out[[ff]] = list(class = "categorical", table = as.character(unique(dat[[ff]])))
+    #}
+  #}
   return(ll_out)
 }
 

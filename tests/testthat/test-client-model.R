@@ -60,3 +60,117 @@ test_that("client model initializes correctly", {
     expect_equal(cm$getSSE()$from_bl[[paste0(bl$getFeature(), "-spline")]], sse)
   }
 })
+
+test_that("client model generation works on DataSHIELD server", {
+  surl     = "https://opal-demo.obiba.org/"
+  username = "administrator"
+  password = "password"
+
+  pkg = "dsCWB"
+
+  opal = expect_silent(dsCWB:::.tryOPALConnection(opalr::opal.login(username = username, password = password, url = surl)))
+
+  if (inherits(opal, "opal")) {
+    # Check if package can be installed:
+    expect_true(opalr::dsadmin.install_github_package(opal = opal, pkg = pkg, username = "schalkdaniel", ref = "main"))
+    expect_true(opalr::dsadmin.publish_package(opal = opal, pkg = pkg))
+
+    opalr::opal.logout(opal, save = FALSE)
+
+    library(DSI)
+    library(DSOpal)
+
+    builder = newDSLoginBuilder()
+
+    builder$append(
+      server   = "ds-test-server-dummy1",
+      url      = surl,
+      user     = username,
+      password = password
+    )
+    builder$append(
+      server   = "ds-test-server-dummy2",
+      url      = surl,
+      user     = username,
+      password = password
+    )
+    connections <<- datashield.login(logins = builder$build(), assign = TRUE)
+
+    datashield.assign(connections, "dat", quote(iris))
+    expect_silent(suppressMessages(datashield.assign(connections, "cm", quote(createClientModel("dat", "Petal.Length")))))
+
+    datashield.symbols(connections)
+
+    fn = datashield.aggregate(connections, quote(getFeatureNames("cm")))
+    fns = c("Species", "Sepal.Length", "Sepal.Width", "Petal.Width")
+    call_get_init = paste0("getClientInit(\"dat\", ", encodeObject(fns), ")")
+    cl_init = datashield.aggregate(connections, call_get_init)
+
+    call_init = paste0("initClientModel(\"cm\", ", encodeObject(cl_init), ")")
+    datashield.assign(connections, call_init)
+
+    cinit = datashield.aggregate(connections, quote(getOptimalConstant("cm")))
+    call_cinit = paste0("initSiteConstant(\"cm\", ", Reduce("+", cinit), ")")
+
+    datashield.assign(connections, call_cinit)
+
+    datashield.aggregate(connections, quote(getClientXtX("cm")))
+    datashield.aggregate(connections, quote(getClientXty("cm")))
+    datashield.aggregate(connections, quote(getClientSSE("cm")))
+
+    expect_equal(dsBinVal:::.dsLength(connections, "valid"), length(valid) * 2)
+
+    p_cls <<- ifelse(p > 0.5, 1, 0)
+    conf_local = table(truth = valid, predicted = p_cls)
+    expect_equal(confusion("valid", "p_cls"), conf_local)
+    conf = expect_silent(suppressMessages(dsConfusion(connections, "valid", "pred")))
+    expect_equal(nrow(conf$confusion), 2)
+    expect_equal(nrow(conf$confusion), 2)
+
+    expect_equal(l2sens("iris", "p", nbreaks = 30L)$l2sens, dsL2Sens(connections, "dat", "pred", nbreaks = 30L))
+    expect_silent(suppressMessages({
+      roc_glm = dsROCGLM(connections, "valid", "pred", dat_name = "iris",
+        seed_object = "pred")
+    }))
+    expect_equal(class(roc_glm), "ROC.GLM")
+    expect_output(print(roc_glm))
+
+    expect_silent(suppressMessages({
+      roc_glm2 = dsROCGLM(connections, "valid", "pred", dat_name = "iris",
+        seed_object = "pred")
+    }))
+    expect_equal(roc_glm, roc_glm2)
+
+    # Suppress ggplot warnings:
+    gg = expect_silent(suppressWarnings(suppressMessages(plot(roc_glm))))
+    expect_true(inherits(gg, "ggplot"))
+    expect_output(print(roc_glm))
+
+
+    datashield.assign(connections, "dat_no_na", quote(removeMissings("dat")))
+    nuisance = lapply(DSI::datashield.symbols(connections), function(s) {
+       expect_true("dat_no_na" %in% s)
+    })
+
+    ri = datashield.aggregate(connections, quote(getDataSHIELDInfo()))
+    expect_equal(class(ri), "list")
+    nuisance = lapply(ri, function(r) {
+      expect_equal(names(r), c("session_info", "pcks"))
+    })
+
+    # Weird, sometimes it complains that message is printed and sometimes that it does
+    # not produce messages ...
+    cc = expect_silent(suppressMessages(dsCalibrationCurve(connections, "valid", "pred", 10, 3)))
+    expect_output(print(cc))
+
+    expect_error(brierScore(connections, 1, 2))
+    bs = expect_silent(suppressMessages(dsBrierScore(connections, "valid", "pred")))
+    expect_true(is.numeric(bs))
+
+    gg_cc = expect_silent(suppressMessages(plot(cc)))
+    expect_true(inherits(gg_cc, "ggplot"))
+
+    datashield.logout(connections)
+
+  }
+})
