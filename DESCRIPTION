@@ -29,6 +29,7 @@ AggregateMethods:
     getClientXtX,
     getClientXty,
     getClientSSE,
+    getCoefficients,
     getRisk,
     getFeatureNames,
     getOptimalConstant

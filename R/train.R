@@ -59,8 +59,16 @@ getMinimalSSE = function(ll_sses) {
   min_list_idx = which.min(unlist(sses_aggr$from_list))
   min_bl_idx = which.min(unlist(sses_aggr$from_bl))
 
-  from_list = sses_aggr$from_list[[min_list_idx]]
-  from_bl = sses_aggr$from_bl[[min_bl_idx]]
+  if (length(min_list_idx) == 0)
+    from_list = NULL
+  else
+    from_list = sses_aggr$from_list[[min_list_idx]]
+
+  if (length(min_bl_idx) == 0)
+    from_bl = NULL
+  else
+    from_bl = sses_aggr$from_bl[[min_bl_idx]]
+
 
   combined_min = c(from_list, from_bl)
   names(combined_min) = c(names(min_list_idx), names(min_bl_idx))

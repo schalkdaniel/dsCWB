@@ -199,6 +199,17 @@ getClientSSE = function(model_symbol = "cwb", par_list_binary = NULL) {
   return(cm$getSSE(par_list_binary = par_list_binary))
 }
 
+#' @title Get the model coefficients.
+#' @param model_symbol (`character(1L)`)\cr
+#'   The name of the model at the server.
+#' @return Model coefficients per base learner.
+#' @export
+getClientModelCoefficients = function(model_symbol = "cwb") {
+  checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
+
+  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  return(cm$getBlParams())
+}
 
 if (FALSE) {
   q()
