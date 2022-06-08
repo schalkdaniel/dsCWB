@@ -34,6 +34,7 @@ AggregateMethods:
     getOptimalConstant
 AssignMethods:
     createClientModel,
-    initClientModel
+    initClientModel,
+    initSiteConstant
 Options: datashield.privacyLevel=5
 RoxygenNote: 7.1.1
