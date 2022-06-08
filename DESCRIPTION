@@ -30,7 +30,8 @@ AggregateMethods:
     getClientXty,
     getClientSSE,
     getRisk,
-    getFeatureNames
+    getFeatureNames,
+    getOptimalConstant
 AssignMethods:
     createClientModel,
     initClientModel

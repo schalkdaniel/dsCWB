@@ -156,6 +156,7 @@ getClientInit = function(symbol, fn_binary) {
       #ll_out[[ff]] = list(class = "categorical", table = as.character(unique(dat[[ff]])))
     #}
   #}
+  names(ll_out) = feature_names
   return(ll_out)
 }
 
