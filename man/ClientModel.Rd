@@ -34,7 +34,7 @@ List of base learner.}
 \item \href{#method-getBlParams}{\code{ClientModel$getBlParams()}}
 \item \href{#method-updateCWBParts}{\code{ClientModel$updateCWBParts()}}
 \item \href{#method-update}{\code{ClientModel$update()}}
-\item \href{#method-addBaselearner}{\code{ClientModel$addBaselearner()}}
+\item \href{#method-addBaselearners}{\code{ClientModel$addBaselearners()}}
 \item \href{#method-getFeatureNames}{\code{ClientModel$getFeatureNames()}}
 \item \href{#method-getPrediction}{\code{ClientModel$getPrediction()}}
 \item \href{#method-getOffset}{\code{ClientModel$getOffset()}}
@@ -52,7 +52,7 @@ Creates a new instance of this [R6][R6::R6Class] class.
   symbol = "D",
   target,
   feature_names = NULL,
-  learning_rate,
+  learning_rate = 0.1,
   df = 5L,
   nknots = 20L,
   ord = 3L,
@@ -278,12 +278,12 @@ Character containing the base learner name.}
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-addBaselearner"></a>}}
-\if{latex}{\out{\hypertarget{method-addBaselearner}{}}}
-\subsection{Method \code{addBaselearner()}}{
+\if{html}{\out{<a id="method-addBaselearners"></a>}}
+\if{latex}{\out{\hypertarget{method-addBaselearners}{}}}
+\subsection{Method \code{addBaselearners()}}{
 Add base learners to the model.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ClientModel$addBaselearner(ll_init)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ClientModel$addBaselearners(ll_init)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

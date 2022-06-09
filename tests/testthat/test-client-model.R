@@ -40,7 +40,7 @@ test_that("client model initializes correctly", {
   expect_equal(cm$getRisk(), cm$loss$risk(cm$getTarget(), cm$getPrediction()))
 
   init = expect_silent(getClientInit(symbol, encodeObject(cm$getFeatureNames())))
-  expect_silent(cm$addBaselearner(init))
+  expect_silent(cm$addBaselearners(init))
 
   ll_xtx = expect_silent(cm$getXtX())
   ll_xty = expect_silent(cm$getXty())

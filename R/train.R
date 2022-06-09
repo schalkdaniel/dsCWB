@@ -110,8 +110,8 @@ transChar = function(x) {
 }
 
 #' @title Train a distributed CWB model.
-#' @param connections (``)\cr
-#'   Connections to the DataSHIELD servers.
+#' @param connections (`list(OpalConnection)`)\cr
+#'   Connections to the DataSHIELD servers (see `?DSI::newDSLoginBuilder`).
 #' @param symbol (`character(1L)`)\cr
 #'   Character containing the name of the data.
 #' @param target (`character(1L)`)\cr
@@ -147,6 +147,8 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   learning_rate = 0.1, df = 5, nknots = 20L, ord = 3L, derivs = 2L, val_fraction = NULL,
   patience = NULL, eps_for_break = NULL, positive = NULL, seed = NULL) {
 
+  checkConnection(connections)
+
   checkmate::assertCharacter(x = symbol, len = 1L, any.missing = FALSE)
   checkmate::assertCharacter(x = target, len = 1L, any.missing = FALSE)
   checkmate::assertCharacter(x = feature_names, any.missing = FALSE)
@@ -164,7 +166,7 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
 
   hm = HostModel$new(symbol = symbol, target = target, feature_names = feature_names,
     learning_rate = learning_rate, df = df, nknots = nknots, ord = ord, derivs = derivs,
-    positive = positive, connections = connections)
+    positive = positive)
 
   tchar = transChar(target)
   fn = transChar(feature_names)
@@ -172,12 +174,13 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   pchar = transChar(positive)
   schar = transChar(seed)
 
-  cl_init = paste0("getClientInit(\"", symbol, "\", c(", fn, "))")
+  cl_init = paste0("getClientInit(\"", symbol, "\", \"", encodeObject(feature_names), "\"))")
   ll_init = datashield.aggregate(connections, cl_init)
 
   ll_init = aggregateInit(ll_init)
-  # Create client models:
 
+  ## Create client models:
+  ## ======================================
 
   # TODO! Adjust degrees of freedom for the client models, must be smaller than
   # the one used for the shared effects.

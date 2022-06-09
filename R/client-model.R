@@ -33,7 +33,7 @@ ClientModel = R6Class("ClientModel",
     #'   Character indicating the positive class in the binary classification setting.
     #' @param seed (`integer(1L)`)\cr
     #'   Seed used for drawing the validation data.
-    initialize = function(symbol = "D", target, feature_names = NULL, learning_rate, df = 5L,
+    initialize = function(symbol = "D", target, feature_names = NULL, learning_rate = 0.1, df = 5L,
       nknots = 20L, ord = 3L, derivs = 2L, val_fraction = NULL, positive = NULL, seed = NULL) {
 
       checkSymbol(symbol)
@@ -214,7 +214,7 @@ ClientModel = R6Class("ClientModel",
       checkmate::assertNumeric(par, any.missing = FALSE, null.ok = TRUE)
       checkmate::assertCharacter(par_binary, len = 1L, any.missing = FALSE, null.ok = TRUE)
 
-      if (xor(is.null(par), is.null(par_binary)))
+      if (! xor(is.null(par), is.null(par_binary)))
         stop("Just one of par or par_binary must be specified")
 
       if (! is.null(par_binary)) {
@@ -243,7 +243,7 @@ ClientModel = R6Class("ClientModel",
     #' Add base learners to the model.
     #' @param ll_init (`list()`)\cr
     #'   List containing the initialization parameters.
-    addBaselearner = function(ll_init) {
+    addBaselearners = function(ll_init) {
       checkmate::assertList(ll_init)
       for (ff in private$p_feature_names) {
         x = private$getFeatureFromData(ff)

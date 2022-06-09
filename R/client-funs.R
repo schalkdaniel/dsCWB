@@ -47,7 +47,7 @@ initClientModel = function(model_symbol, ll_init_binary) {
   checkmate::assertList(ll_init)
 
   #list(feature = c(min = 1, max = 2))
-  cm$addBaselearner(ll_init)
+  cm$addBaselearners(ll_init)
 
   return(cm)
 }
@@ -249,7 +249,7 @@ if (FALSE) {
   getClientXty("cm")
 
   hm = HostModel$new("iris", "Sepal.Length", "regression", fn)
-  hm$addBaselearner(ll_init, ll_xtx)
+  hm$addBaselearners(ll_init, ll_xtx)
   ll_par = hm$getParam(ll_xty)
 
   sses3 = getClientSSE("cm", encodeObject(ll_par))

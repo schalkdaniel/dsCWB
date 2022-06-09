@@ -10,6 +10,14 @@ checkSymbol = function(symbol) {
     stop("Cannot find symbol ", symbol, " in .GlobalEnv")
 }
 
+#' @param connections (`list(OpalConnection)`)\cr
+#'   Connections to the DataSHIELD servers.
+checkConnection = function(connections) {
+  checkmate::assertList(connections)
+  if (length(connections) == 0)
+    stop("connections must contain at least one element of class `OpalConnection` (see `?DSI::newDSLoginBuilder`).")
+  nuisance = lapply(connections, checkmate::assertClass, classes = "OpalConnection")
+}
 
 #' @title Paste a numeric vector into a character vector
 #' @description
