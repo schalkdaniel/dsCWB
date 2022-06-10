@@ -26,6 +26,7 @@ getClientTaskType = function(symbol, target) {
   return(getTaskType(x))
 }
 
+#' @title Check the DataSHIELD connection
 #' @param connections (`list(OpalConnection)`)\cr
 #'   Connections to the DataSHIELD servers.
 checkConnection = function(connections) {
