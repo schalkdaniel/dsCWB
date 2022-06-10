@@ -70,7 +70,7 @@ getFeatureNames = function(model_symbol) {
 #' @export
 getRisk = function(model_symbol, risk_type = "train") {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
-  checkmate::assertChoice(model_symbol, choices = c("full", "train", "val"))
+  checkmate::assertChoice(risk_type, choices = c("full", "train", "val"))
   cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
   return(cm$getRisk(risk_type))
 }

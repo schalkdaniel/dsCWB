@@ -43,7 +43,7 @@ if (! check2)
 
 # Component-wise boosting for DataSHIELD
 
-The package provides functionality to conduct and visualize component-wise boosting on decentralized data. The basis is the DataSHIELD](https://www.datashield.org/) infrastructure for distributed computing. This package provides the calculation of the [__component-wise boosting__](https://www.tandfonline.com/doi/abs/10.1198/016214503000125). Note that DataSHIELD uses an option `datashield.privacyLevel` to indicate the minimal amount of numbers required to be allowed to share an aggregated value of these numbers. Instead of setting the option, we directly retrieve the privacy level from the [`DESCRIPTION`](https://github.com/schalkdaniel/dsCWB/blob/master/DESCRIPTION) file each time a function calls for it. This options is set to 5 by default.
+The package provides functionality to conduct and visualize component-wise boosting on decentralized data. The basis is the [DataSHIELD](https://www.datashield.org/) infrastructure for distributed computing. This package provides the calculation of the [__component-wise boosting__](https://www.tandfonline.com/doi/abs/10.1198/016214503000125). Note that DataSHIELD uses an option `datashield.privacyLevel` to indicate the minimal amount of numbers required to be allowed to share an aggregated value of these numbers. Instead of setting the option, we directly retrieve the privacy level from the [`DESCRIPTION`](https://github.com/schalkdaniel/dsCWB/blob/master/DESCRIPTION) file each time a function calls for it. This options is set to 5 by default.
 
 
 ## Installation

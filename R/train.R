@@ -287,11 +287,11 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   k = 1
   while (train_iter) {
     # Get Xty and SSEs from fitted site-specific effects from the ds servers:
-    ll_xty = datashield.aggregate(connections, quote(getClientXty("cm")))
-    ll_shared_effects_param = hm$getParam(ll_xty)
+    ll_xty = datashield.aggregate(connections, paste0("getClientXty(", mchar, ")"))
+    ll_shared_effects_param = hm$getParam(aggregateXtX(ll_xty))
 
-    cl_sses = paste0("getClientSSE(\"cm\", ", encodeObject(ll_shared_effects_param), ")")
-    ll_sses = datashield.aggregate(connections, paste0(getClientSSE("cm", cl_sses)))
+    cl_sses = paste0("getClientSSE(", mchar, ", \"", encodeObject(ll_shared_effects_param), "\")")
+    ll_sses = datashield.aggregate(connections, cl_sses)
 
     min_sse = getMinimalSSE(ll_sses)
 
