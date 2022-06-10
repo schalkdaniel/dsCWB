@@ -57,7 +57,7 @@ test_that("update step is working", {
   pars = hm$getParam(ll_xty)
 
   expect_silent(hm$update(fupdate, pars[[fupdate]]))
-  expect_equal(hm$bls[[fupdate]]$getParam() * hm$lr, pars[[fupdate]])
+  expect_equal(hm$bls[[fupdate]]$getParam(), pars[[fupdate]] * hm$lr)
 
   expect_null(hm$bls[[2]]$getParam())
   expect_null(hm$bls[[3]]$getParam())
