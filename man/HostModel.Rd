@@ -13,6 +13,9 @@ It collects all base learners.
 \item{\code{loss}}{(`Loss`)\cr
 Loss object used for modelling.}
 
+\item{\code{offset}}{(numeric(1L)\cr
+Model offset.}
+
 \item{\code{lr}}{(numeric(1L)\cr
 Learning rate.}
 
@@ -25,6 +28,7 @@ List of base learner.}
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-new}{\code{HostModel$new()}}
+\item \href{#method-setOffset}{\code{HostModel$setOffset()}}
 \item \href{#method-addBaselearners}{\code{HostModel$addBaselearners()}}
 \item \href{#method-getDataSymbol}{\code{HostModel$getDataSymbol()}}
 \item \href{#method-getFeatureNames}{\code{HostModel$getFeatureNames()}}
@@ -86,6 +90,24 @@ Number of penalized differences.}
 
 \item{\code{positive}}{(`integer(1L)`)\cr
 Character indicating the positive class in the binary classification setting.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-setOffset"></a>}}
+\if{latex}{\out{\hypertarget{method-setOffset}{}}}
+\subsection{Method \code{setOffset()}}{
+Set the model offset.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HostModel$setOffset(offset)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{offset}}{(`numeric(1L)`)\cr
+Offset values.}
 }
 \if{html}{\out{</div>}}
 }

@@ -15,8 +15,8 @@ aggregateInit = function(ll_init) {
         cls = unique(c(cls, ll_init[[s]][[f]]$table))
       }
     }
-    if (ll_init[[1]][[f]]$class == "numeric") ll_out[[f]] = list(min = mm, max = ma)
-    if (ll_init[[1]][[f]]$class == "categorical") ll_out[[f]] = list(table = cls)
+    if (ll_init[[1]][[f]]$class == "numeric") ll_out[[f]] = list(min = mm, max = ma, class = "numeric")
+    if (ll_init[[1]][[f]]$class == "categorical") ll_out[[f]] = list(table = cls, class = "categorical")
   }
   return(ll_out)
 }
@@ -102,7 +102,7 @@ transChar = function(x) {
   }
 
   if (is.null(x))
-    cchar = paste0(qchar, "NULL", qchar)
+    cchar = "NULL"
   else
     cchar = paste0(qchar, x, qchar)
 
@@ -229,48 +229,57 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   pchar = transChar(positive)
   schar = transChar(seed)
 
+  model_symbol = "cm"
+  mchar = transChar(model_symbol)
+
   tt = datashield.aggregate(connections, paste0("getClientTaskType(", symchar, ",", tchar, ")"))
+
+  if (length(unique(unlist(tt))) > 1)
+    stop("Clients have returned different task types.")
+
+  tt = tt[[1]]
 
   hm = HostModel$new(symbol = symbol, target = target, target_type = tt, feature_names = feature_names,
     learning_rate = learning_rate, df = df, nknots = nknots, ord = ord, derivs = derivs,
     positive = positive)
 
-
-  cl_init = paste0("getClientInit(\"", symbol, "\", \"", encodeObject(feature_names), "\"))")
-  ll_init = datashield.aggregate(connections, cl_init)
-
-  ll_init = aggregateInit(ll_init)
-
   ## Create client models:
   ## ======================================
 
-  # TODO! Adjust degrees of freedom for the client models, must be smaller than
-  # the one used for the shared effects.
-  cl_mod = paste0("createClientModel(\"", symbol, "\", ", tchar, ", c(", fn, "), ",
-    learning_rate, ",", df, ",", nknots, ",", ord, ",", derivs, ",", oobchar, ",",
-    pchar, ",", schar, ")")
+  eval(parse(text = paste0("call_init_client_model = quote(createClientModel(",
+    symchar, ",", tchar, ", c(", fn, ") ,", learning_rate, ", ", df, ", ", nknots, ", ", ord, ", ",
+    derivs, ", ", oobchar, ", ", pchar, ", ", schar,
+  "))")))
 
-  datashield.assign(connections, "cm", cl_mod)
-  datashield.assign(connections, "cm", paste0(initClientModel("cm", encodeObject(ll_init))))
+  datashield.assign(connections, model_symbol, call_init_client_model)
 
-  cl_const_init = paste0("getOptimalConstant(\"cm\")")
-  inits = datashield.aggregate(connections, cl_const_init)
+  call_get_init = paste0("getClientInit(", symchar, ", \"", encodeObject(feature_names), "\")")
+  cl_init = datashield.aggregate(connections, call_get_init)
+  cli = aggregateInit(cl_init)
 
-  # Host model aggregates constant initializations:
-  const_init = hm$loss$aggregateInit(inits)
+  call_init = paste0("initClientModel(", mchar, ", \"", encodeObject(cli), "\")")
+  eval(parse(text = paste0("cq = quote(", call_init, ")")))
+  datashield.assign(connections, model_symbol, cq)
 
-  cl_site_const_init = paste0("initSiteConstant(\"cm\", ", const_init, ")")
-  datashield.assign(connections, "cm", cl_site_const_init)
+  eval(parse(text = paste0("cl_opt_const = quote(getOptimalConstant(", mchar ,"))")))
+  cinit = datashield.aggregate(connections, cl_opt_const)
+  eval(parse(text = paste0("w_opt_const = quote(getClientNrow(", symchar ,"))")))
+  winit = datashield.aggregate(connections, w_opt_const)
+
+  co = weighted.mean(x = unlist(cinit), w = unlist(winit) / Reduce("+", winit))
+  #co = Reduce("mean", cinit)
+
+  cl_site_const_init = paste0("initSiteConstant(", mchar, ", ", co, ")")
+  eval(parse(text = paste0("cq_cinit = quote(", cl_site_const_init, ")")))
+  datashield.assign(connections, model_symbol, cq_cinit)
 
   cl_site_xtx = paste0("getClientXtX(\"cm\")")
   xtxs = datashield.aggregate(connections, cl_site_xtx)
-
   ll_xtx = aggregateXtX(xtxs)
 
   # Init host model:
-  hm$setOffset(const_init)
-  hm$addBaselearner(ll_init, ll_xtx)
-  #hm$connect(connections)
+  hm$setOffset(co)
+  hm$addBaselearners(cli, ll_xtx)
 
   # Training the model:
   train_iter = TRUE

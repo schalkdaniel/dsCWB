@@ -36,6 +36,21 @@ checkConnection = function(connections) {
   nuisance = lapply(connections, checkmate::assertClass, classes = "OpalConnection")
 }
 
+#' @title Get number of rows of client data
+#' @param symbol (`character(1L)`)\cr
+#'   Symbol specifying something.
+#' @export
+getClientNrow = function(symbol) {
+  checkmate::assertCharacter(symbol, len = 1L, any.missing = FALSE)
+  checkSymbol(symbol)
+
+  dat = eval(parse(text = symbol), envir = .GlobalEnv)
+  checkmate::assertDataFrame(dat)
+  n = nrow(dat)
+
+  return(n)
+}
+
 #' @title Paste a numeric vector into a character vector
 #' @description
 #'   Converts a numerical vector into one string with the values separated

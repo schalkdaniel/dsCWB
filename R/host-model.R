@@ -60,6 +60,15 @@ HostModel = R6Class("HostModel",
     },
 
     #' @description
+    #' Set the model offset.
+    #' @param offset (`numeric(1L)`)\cr
+    #'   Offset values.
+    setOffset = function(offset) {
+      checkmate::assertNumeric(offset, len = 1L, any.missing = FALSE)
+      private$p_offset = offset
+    },
+
+    #' @description
     #' Add base learners to the model.
     #' @param ll_init (`list()`)\cr
     #'   List containing the initialization parameters.
@@ -174,6 +183,13 @@ HostModel = R6Class("HostModel",
       return(private$p_loss)
     },
 
+    #' @field offset (numeric(1L)\cr
+    #'   Model offset.
+    offset = function(x) {
+      if (! missing(x)) stop("`offset` is read only.")
+      return(private$p_offset)
+    },
+
     #' @field lr (numeric(1L)\cr
     #'   Learning rate.
     lr = function(x) {
@@ -203,6 +219,7 @@ HostModel = R6Class("HostModel",
     p_log = NULL,
     p_loss = NULL,
     p_vinit = NULL,
-    p_positive = NULL
+    p_positive = NULL,
+    p_offset = NULL
   )
 )
