@@ -10,6 +10,22 @@ checkSymbol = function(symbol) {
     stop("Cannot find symbol ", symbol, " in .GlobalEnv")
 }
 
+#' @title Get the task type.
+#' @param symbol (`character(1L)`)\cr
+#'   Symbol specifying something.
+#' @param target (`character(1L)`)\cr
+#'   The name response variable.
+#' @export
+getClientTaskType = function(symbol, target) {
+  checkmate::assertCharacter(symbol, len = 1L, any.missing = FALSE)
+  checkmate::assertCharacter(target, len = 1L, any.missing = FALSE)
+  checkSymbol(symbol)
+
+  x = eval(parse(text = symbol), envir = .GlobalEnv)[[target]]
+
+  return(getTaskType(x))
+}
+
 #' @param connections (`list(OpalConnection)`)\cr
 #'   Connections to the DataSHIELD servers.
 checkConnection = function(connections) {

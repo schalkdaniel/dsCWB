@@ -32,7 +32,8 @@ AggregateMethods:
     getCoefficients,
     getRisk,
     getFeatureNames,
-    getOptimalConstant
+    getOptimalConstant,
+    getClientTaskType
 AssignMethods:
     createClientModel,
     initClientModel,

@@ -25,6 +25,11 @@ test_that("host model can be initialized correctly",  {
   cm$update(fupdate)
   ## -- end client model
 
+  expect_error(getClientTaskType("iris", "Species"))
+  expect_equal(getClientTaskType("iris", "Sepal.Width"), "regression")
+  d0 <<- iris[1:100, ]
+  expect_equal(getClientTaskType("d0", "Species"), "bin-class")
+
   hm = expect_silent(HostModel$new(symbol, target, "regression", fns))
 
   expect_equal(hm$getDataSymbol(), symbol)
