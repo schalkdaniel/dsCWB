@@ -63,9 +63,19 @@ HostModel = R6Class("HostModel",
     #' Set the model offset.
     #' @param offset (`numeric(1L)`)\cr
     #'   Offset values.
-    setOffset = function(offset) {
+    #' @param overwrite (`logical(1L)`)\cr
+    #'   Overwrite offset if already set.
+    setOffset = function(offset, overwrite = FALSE) {
       checkmate::assertNumeric(offset, len = 1L, any.missing = FALSE)
-      private$p_offset = offset
+      if (is.null(private$p_offset)) {
+        private$p_offset = offset
+      } else {
+        if (overwrite) {
+          private$p_offset = offset
+        } else {
+          warning("Offset already set! Use `overwrite = TRUE` to overwrite it.")
+        }
+      }
     },
 
     #' @description
@@ -129,6 +139,13 @@ HostModel = R6Class("HostModel",
     },
 
     #' @description
+    #' Get XtX of the base learners.
+    getXtX = function() {
+      if (is.null(private$p_bls)) return(NULL)
+      return(lapply(private$p_bls, function(bl) bl$getXtX()))
+    },
+
+    #' @description
     #' Conduct an update step.
     #' @param blname (`character(1L)`)\cr
     #'   Base learner name.
@@ -173,6 +190,12 @@ HostModel = R6Class("HostModel",
           risk_train = risk_train, risk_val = risk_val)
         private$p_log = rbind(private$p_log, lnew)
       }
+    },
+
+    #' @description
+    #' Get the log created by `log()`
+    getLog = function() {
+      return(private$p_log)
     }
   ),
   active = list(
@@ -203,6 +226,7 @@ HostModel = R6Class("HostModel",
       if (! missing(x)) stop("`bls` is read only.")
       return(private$p_bls)
     }
+
   ),
   private = list(
     p_symbol = NULL,

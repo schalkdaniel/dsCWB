@@ -44,36 +44,41 @@ getMinimalSSE = function(ll_sses) {
   })
 
   sses_aggr = ll_sses[[1]]
+  out = list()
   for (n1 in names(sses_aggr)) {
     for (n2 in names(sses_aggr[[n1]])) {
-      sses_aggr[[n1]][[n2]] = 0
+      out[[n1]][[n2]] = 0
     }
   }
   for (n1 in names(ll_sses)) {
     for (n2 in names(ll_sses[[n1]])) {
       for (n3 in names(ll_sses[[n1]][[n2]])) {
-        sses_aggr[[n2]][[n3]] = sses_aggr[[n2]][[n3]] + ll_sses[[n1]][[n2]][[n3]]
+        out[[n2]][[n3]] = out[[n2]][[n3]] + ll_sses[[n1]][[n2]][[n3]]
       }
     }
   }
-  min_list_idx = which.min(unlist(sses_aggr$from_list))
-  min_bl_idx = which.min(unlist(sses_aggr$from_bl))
+  min_list_idx = which.min(unlist(out$from_list))
+  min_bl_idx = which.min(unlist(out$from_bl))
 
   if (length(min_list_idx) == 0)
     from_list = NULL
   else
-    from_list = sses_aggr$from_list[[min_list_idx]]
+    from_list = out$from_list[[min_list_idx]]
 
   if (length(min_bl_idx) == 0)
     from_bl = NULL
   else
-    from_bl = sses_aggr$from_bl[[min_bl_idx]]
+    from_bl = out$from_bl[[min_bl_idx]]
 
 
   combined_min = c(from_list, from_bl)
   names(combined_min) = c(names(min_list_idx), names(min_bl_idx))
 
   min_idx = which.min(combined_min)
+
+  if (combined_min[1] == combined_min[[2]])
+    min_idx = 1
+
   sse_min = min(c(from_list, from_bl))
   names(sse_min) = names(min_idx)
 
@@ -144,13 +149,6 @@ transChar = function(x) {
 #' @importFrom DSI datashield.aggregate datashield.assign
 #' @examples
 #' \dontrun{
-#' if (FALSE) {
-#'
-#' q()
-#' R
-#' library(testthat)
-#' devtools::load_all()
-#'
 #' # Install package on DataSHIELD test server:
 #' surl     = "https://opal-demo.obiba.org/"
 #' username = "administrator"
@@ -198,7 +196,6 @@ transChar = function(x) {
 #' seed = NULL
 #'
 #' datashield.logout(connections)
-#' }
 #' }
 #' @export
 dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L,
@@ -250,7 +247,6 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
     symchar, ",", tchar, ", c(", fn, ") ,", learning_rate, ", ", df, ", ", nknots, ", ", ord, ", ",
     derivs, ", ", oobchar, ", ", pchar, ", ", schar,
   "))")))
-
   datashield.assign(connections, model_symbol, call_init_client_model)
 
   call_get_init = paste0("getClientInit(", symchar, ", \"", encodeObject(feature_names), "\")")
@@ -296,24 +292,32 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
     min_sse = getMinimalSSE(ll_sses)
 
     # Get risk:
-    ll_rt = datashield.aggregate(connections, quote(getRisk("cm", "train")))
+    ll_rt = datashield.aggregate(connections, eval(parse(text = paste0("quote(getRisk(", mchar, ", \"train\"))"))))
     risk_train = Reduce("+", ll_rt)
 
     risk_val = NA
     if (! is.null(val_fraction)) {
-      ll_rv = datashield.aggregate(connections, quote(getRisk("cm", "val")))
+      ll_rv = datashield.aggregate(connections, eval(parse(text = paste0("quote(getRisk(", mchar, ", \"val\"))"))))
       risk_val = Reduce("+", ll_rv)
     }
 
     # Add to log:
     hm$log(names(min_sse), attr(min_sse, "effect_type"), min_sse, risk_train, risk_val)
 
-    # Update model on ds servers if it was selected:
-    bl_param = NULL
-    if (names(min_sse) %in% names(ll_shared_effects_param))
-      bl_param = ll_shared_effects_param[[names(min_sse)]]
+    blname = transChar(names(min_sse))
+    if (attr(min_sse, "effect_type") == "site") {
+      # update client
+      cl_update = paste0("quote(updateClientBaselearner(", mchar, ", ", blname, "))")
+      datashield.assign(connections, model_symbol, eval(parse(text = cl_update)))
+    } else {
+      par = ll_shared_effects_param[[names(min_sse)]]
+      hm$update(names(min_sse), bl_param)
+      #  update client parts.
+      cl_update = paste0("quote(updateClientBaselearner(", mchar, ", ", transChar(names(min_sse)), ", ",
+        transChar(encodeObject(par)), "))")
+      datashield.assign(connections, model_symbol, eval(parse(text = cl_update)))
 
-    hm$update(names(min_sse), bl_param)
+    }
 
     # Determine stopping criteria:
     if (is.infinite(risk_old))
