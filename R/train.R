@@ -266,10 +266,13 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
 
   eval(parse(text = paste0("cl_opt_const = quote(getOptimalConstant(", mchar ,"))")))
   cinit = datashield.aggregate(connections, cl_opt_const)
-  eval(parse(text = paste0("w_opt_const = quote(getClientNrow(", symchar ,"))")))
+
+  eval(parse(text = paste0("w_opt_const = quote(getClientTrainValObs(", mchar ,"))")))
   winit = datashield.aggregate(connections, w_opt_const)
 
-  co = weighted.mean(x = unlist(cinit), w = unlist(winit) / Reduce("+", winit))
+  ntrain = vapply(winit, function(w) w$ntrain, integer(1L))
+
+  co = weighted.mean(x = unlist(cinit), w = unlist(ntrain) / Reduce("+", ntrain))
 
   cl_site_const_init = paste0("initSiteConstant(", mchar, ", ", co, ")")
   eval(parse(text = paste0("cq_cinit = quote(", cl_site_const_init, ")")))
@@ -287,6 +290,12 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   train_iter = TRUE
   risk_old = Inf
   k = 1
+  if (all(! is.null(patience), ! is.null(eps_for_break), ! is.null(val_fraction))) {
+    early_stop = TRUE
+    risk_val_old = Inf
+    p0 = 0
+  }
+
   while (train_iter) {
     # Get Xty and SSEs from fitted site-specific effects from the ds servers:
     ll_xty = datashield.aggregate(connections, paste0("getClientXty(", mchar, ")"))
@@ -299,12 +308,13 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
 
     # Get risk:
     ll_rt = datashield.aggregate(connections, eval(parse(text = paste0("quote(getRisk(", mchar, ", \"train\"))"))))
-    risk_train = Reduce("+", ll_rt)
+    risk_train = Reduce("+", ll_rt) / sum(unlist(ntrain))
 
     risk_val = NA
     if (! is.null(val_fraction)) {
+      nval = vapply(winit, function(w) w$nval, integer(1L))
       ll_rv = datashield.aggregate(connections, eval(parse(text = paste0("quote(getRisk(", mchar, ", \"val\"))"))))
-      risk_val = Reduce("+", ll_rv)
+      risk_val = Reduce("+", ll_rv) / sum(unlist(nval))
     }
 
     # Add to log:
@@ -324,16 +334,31 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
       datashield.assign(connections, model_symbol, eval(parse(text = cl_update)))
     }
 
+
     # Determine stopping criteria:
     if (is.null(eps_for_break))
       eps_for_break = -Inf
 
     if (is.infinite(risk_old))
-      val_eps = 1
+      train_eps = 1
     else
-      val_eps = (risk_old - risk_train) / risk_old
+      train_eps = (risk_old - risk_train) / risk_old
 
-    if ((k >= mstop) || (val_eps <= eps_for_break)) train_iter = FALSE
+    if (k >= mstop) train_iter = FALSE
+
+    if (early_stop) {
+      if (is.infinite(risk_val_old))
+        val_eps = 1
+      else
+        val_eps = (risk_val_old - risk_val) / risk_val_old
+
+      if (val_eps <= eps_for_break)
+        p0 = p0 + 1
+      else
+        p0 = 0
+
+      if (p0 == patience) train_iter = FALSE
+    }
 
     if (trace) {
       lline = hm$getLog(k)

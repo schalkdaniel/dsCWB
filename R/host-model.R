@@ -183,12 +183,13 @@ HostModel = R6Class("HostModel",
       checkmate::assertNumeric(risk_train, len = 1L)
       checkmate::assertNumeric(risk_val, len = 1L)
 
+      tchar = Sys.time()
       if (is.null(private$p_log)) {
-        private$p_log = data.frame(iteration = 1, bl = blname, effect_type = effect_type, sse = sse,
+        private$p_log = data.frame(time = tchar, iteration = 1, bl = blname, effect_type = effect_type, sse = sse,
           risk_train = risk_train, risk_val = risk_val)
       } else {
-        lnew = data.frame(iteration = nrow(private$p_log) + 1, bl = blname, effect_type = effect_type, sse = sse,
-          risk_train = risk_train, risk_val = risk_val)
+        lnew = data.frame(time = tchar, iteration = nrow(private$p_log) + 1, bl = blname,
+          effect_type = effect_type, sse = sse, risk_train = risk_train, risk_val = risk_val)
         private$p_log = rbind(private$p_log, lnew)
       }
     },

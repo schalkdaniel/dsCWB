@@ -44,10 +44,11 @@ nknots = 20L
 ord = 3L
 derivs = 2L
 val_fraction = 0.1
-patience = NULL
-eps_for_break = NULL
+patience = 5
+eps_for_break = 0.1
 positive = NULL
 seed = 31415
+trace = TRUE
 
 datashield.logout(connections)
 
