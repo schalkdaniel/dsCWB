@@ -76,13 +76,18 @@ getMinimalSSE = function(ll_sses) {
 
   min_idx = which.min(combined_min)
 
-  if (combined_min[1] == combined_min[[2]])
+  # It may happen due to the transmission of the sse values that there are small
+  # differences even though there aren't. Hence, a check with the diff is done
+  # instead of checking `combined_min[[1]] == combined_min[[2]]`.
+  if (abs(diff(combined_min)) < 1e-9) {
     min_idx = 1
+    names(min_idx) = names(combined_min)[1]
+  }
 
   sse_min = min(c(from_list, from_bl))
   names(sse_min) = names(min_idx)
 
-  attr(sse_min, "effect_type") = ifelse(unname(min_idx) == 1, "shared", "site")
+  attr(sse_min, "effect_type") = ifelse(min_idx == 1, "shared", "site")
 
   return(sse_min)
 }
@@ -302,7 +307,7 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
     }
 
     # Add to log:
-    hm$log(names(min_sse), attr(min_sse, "effect_type"), min_sse, risk_train, risk_val)
+    hm$log(names(min_sse), unname(attr(min_sse, "effect_type")), unname(min_sse), risk_train, risk_val)
 
     blname = transChar(names(min_sse))
     if (attr(min_sse, "effect_type") == "site") {
@@ -311,15 +316,17 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
       datashield.assign(connections, model_symbol, eval(parse(text = cl_update)))
     } else {
       par = ll_shared_effects_param[[names(min_sse)]]
-      hm$update(names(min_sse), bl_param)
+      hm$update(names(min_sse), par)
       #  update client parts.
       cl_update = paste0("quote(updateClientBaselearner(", mchar, ", ", transChar(names(min_sse)), ", ",
         transChar(encodeObject(par)), "))")
       datashield.assign(connections, model_symbol, eval(parse(text = cl_update)))
-
     }
 
     # Determine stopping criteria:
+    if (is.null(eps_for_break))
+      eps_for_break = -Inf
+
     if (is.infinite(risk_old))
       val_eps = 1
     else
@@ -327,9 +334,20 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
 
     if ((k >= mstop) || (val_eps <= eps_for_break)) train_iter = FALSE
 
+    if (trace) {
+      lline = hm$getLog(k)
+      vrisk = ""
+      if (! is.na(lline$risk_val)) vrisk = paste0("risk (val) = ", round(lline$risk_val, 4), ", ")
+      cat(lline$iteration, ": risk (train) = ", lline$risk_train, ", ", vrisk, "base learner = ", lline$bl, " (",
+        lline$effect_type, ", ", round(lline$sse, 4), ")\n", sep = "")
+    }
+
     risk_old = risk_train
     k = k + 1
+
   }
+  site_params = datashield.aggregate(connections, paste0("getClientModelCoefficients(", mchar, ")"))
+  hm$setSiteCoefficients(site_params)
   return(hm)
 
   ## Initialize client models:

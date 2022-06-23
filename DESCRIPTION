@@ -34,7 +34,8 @@ AggregateMethods:
     getFeatureNames,
     getOptimalConstant,
     getClientTaskType,
-    getClientNrow
+    getClientNrow,
+    getClientModelCoefficients
 AssignMethods:
     createClientModel,
     initClientModel,

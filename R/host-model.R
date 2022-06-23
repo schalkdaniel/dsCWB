@@ -67,6 +67,7 @@ HostModel = R6Class("HostModel",
     #'   Overwrite offset if already set.
     setOffset = function(offset, overwrite = FALSE) {
       checkmate::assertNumeric(offset, len = 1L, any.missing = FALSE)
+      checkmate::assertLogical(overwrite, len = 1L, any.missing = FALSE)
       if (is.null(private$p_offset)) {
         private$p_offset = offset
       } else {
@@ -194,8 +195,34 @@ HostModel = R6Class("HostModel",
 
     #' @description
     #' Get the log created by `log()`
-    getLog = function() {
-      return(private$p_log)
+    #' @param iter (`integer(1L)`)\cr
+    #'   Row of the log corresponding to iter.
+    getLog = function(iter = NULL) {
+      if (is.null(iter))
+        return(private$p_log)
+      else
+        return(private$p_log[iter, ])
+    },
+
+    #' @description
+    #' Set site coeficients.
+    #' @param coefs (`list()`)\cr
+    #'   Site coefficients.
+    #' @param overwrite (`locigal(1L)`)\cr
+    #'   Overwrite coefficients if already set.
+    setSiteCoefficients = function(coefs, overwrite = FALSE) {
+      checkmate::assertList(coefs)
+      checkmate::assertLogical(overwrite, len = 1L, any.missing = FALSE)
+      if (is.null(private$p_offset)) {
+        private$p_site_coefs = coefs
+      } else {
+        if (overwrite) {
+          private$p_site_coefs = coefs
+        } else {
+          warning("Site coefficients already set! Use `overwrite = TRUE` to overwrite it.")
+        }
+      }
+
     }
   ),
   active = list(
@@ -225,6 +252,15 @@ HostModel = R6Class("HostModel",
     bls = function(x) {
       if (! missing(x)) stop("`bls` is read only.")
       return(private$p_bls)
+    },
+
+    #' @field coef (`list()`)\cr
+    #'   List of estimated parameters.
+    coef = function(x) {
+      if (! missing(x)) stop("`coef` is read only.")
+      shared_params = lapply(private$p_bls, function(bl) bl$getParam())
+      site_params = private$p_site_coefs
+      return(list(shared = shared_params, site = site_params))
     }
 
   ),
@@ -244,6 +280,7 @@ HostModel = R6Class("HostModel",
     p_loss = NULL,
     p_vinit = NULL,
     p_positive = NULL,
-    p_offset = NULL
+    p_offset = NULL,
+    p_site_coefs = NULL
   )
 )
