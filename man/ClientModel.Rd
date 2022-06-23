@@ -39,6 +39,7 @@ List of base learner.}
 \item \href{#method-getPrediction}{\code{ClientModel$getPrediction()}}
 \item \href{#method-getOffset}{\code{ClientModel$getOffset()}}
 \item \href{#method-getTarget}{\code{ClientModel$getTarget()}}
+\item \href{#method-getTrainValObs}{\code{ClientModel$getTrainValObs()}}
 \item \href{#method-clone}{\code{ClientModel$clone()}}
 }
 }
@@ -354,6 +355,16 @@ and `val` (for the validation vector).}
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getTrainValObs"></a>}}
+\if{latex}{\out{\hypertarget{method-getTrainValObs}{}}}
+\subsection{Method \code{getTrainValObs()}}{
+Get the number of rows per train and validation set.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ClientModel$getTrainValObs()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-clone"></a>}}

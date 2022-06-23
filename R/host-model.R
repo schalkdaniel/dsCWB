@@ -213,7 +213,7 @@ HostModel = R6Class("HostModel",
     setSiteCoefficients = function(coefs, overwrite = FALSE) {
       checkmate::assertList(coefs)
       checkmate::assertLogical(overwrite, len = 1L, any.missing = FALSE)
-      if (is.null(private$p_offset)) {
+      if (is.null(private$p_site_coefs)) {
         private$p_site_coefs = coefs
       } else {
         if (overwrite) {

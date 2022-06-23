@@ -19,7 +19,8 @@ dsCWB(
   patience = NULL,
   eps_for_break = NULL,
   positive = NULL,
-  seed = NULL
+  seed = NULL,
+  trace = TRUE
 )
 }
 \arguments{
@@ -67,6 +68,9 @@ Name of the positive class in binary classification.}
 
 \item{seed}{(`numeric(1L)`)\cr
 Seed for generating validation data (only applies when val_fraction is set).}
+
+\item{trace}{(`logical(1L)`)\cr
+Indicator if the fitting trace should be printed or not.}
 }
 \value{
 Client model of R6 class ClientModel.
@@ -76,13 +80,6 @@ Train a distributed CWB model.
 }
 \examples{
 \dontrun{
-if (FALSE) {
-
-q()
-R
-library(testthat)
-devtools::load_all()
-
 # Install package on DataSHIELD test server:
 surl     = "https://opal-demo.obiba.org/"
 username = "administrator"
@@ -130,6 +127,5 @@ positive = NULL
 seed = NULL
 
 datashield.logout(connections)
-}
 }
 }

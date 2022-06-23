@@ -21,6 +21,9 @@ Learning rate.}
 
 \item{\code{bls}}{(`list(Baselearner)`)\cr
 List of base learner.}
+
+\item{\code{coef}}{(`list()`)\cr
+List of estimated parameters.}
 }
 \if{html}{\out{</div>}}
 }
@@ -33,8 +36,11 @@ List of base learner.}
 \item \href{#method-getDataSymbol}{\code{HostModel$getDataSymbol()}}
 \item \href{#method-getFeatureNames}{\code{HostModel$getFeatureNames()}}
 \item \href{#method-getParam}{\code{HostModel$getParam()}}
+\item \href{#method-getXtX}{\code{HostModel$getXtX()}}
 \item \href{#method-update}{\code{HostModel$update()}}
 \item \href{#method-log}{\code{HostModel$log()}}
+\item \href{#method-getLog}{\code{HostModel$getLog()}}
+\item \href{#method-setSiteCoefficients}{\code{HostModel$setSiteCoefficients()}}
 \item \href{#method-clone}{\code{HostModel$clone()}}
 }
 }
@@ -100,7 +106,7 @@ Character indicating the positive class in the binary classification setting.}
 \subsection{Method \code{setOffset()}}{
 Set the model offset.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HostModel$setOffset(offset)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HostModel$setOffset(offset, overwrite = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -108,6 +114,9 @@ Set the model offset.
 \describe{
 \item{\code{offset}}{(`numeric(1L)`)\cr
 Offset values.}
+
+\item{\code{overwrite}}{(`logical(1L)`)\cr
+Overwrite offset if already set.}
 }
 \if{html}{\out{</div>}}
 }
@@ -172,6 +181,16 @@ List containing the Xty matrices.}
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getXtX"></a>}}
+\if{latex}{\out{\hypertarget{method-getXtX}{}}}
+\subsection{Method \code{getXtX()}}{
+Get XtX of the base learners.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HostModel$getXtX()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-update"></a>}}
 \if{latex}{\out{\hypertarget{method-update}{}}}
 \subsection{Method \code{update()}}{
@@ -218,6 +237,45 @@ Training risk.}
 
 \item{\code{risk_val}}{(`numeric(1L)`)\cr
 Validation risk.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getLog"></a>}}
+\if{latex}{\out{\hypertarget{method-getLog}{}}}
+\subsection{Method \code{getLog()}}{
+Get the log created by `log()`
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HostModel$getLog(iter = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{iter}}{(`integer(1L)`)\cr
+Row of the log corresponding to iter.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-setSiteCoefficients"></a>}}
+\if{latex}{\out{\hypertarget{method-setSiteCoefficients}{}}}
+\subsection{Method \code{setSiteCoefficients()}}{
+Set site coeficients.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HostModel$setSiteCoefficients(coefs, overwrite = FALSE)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{coefs}}{(`list()`)\cr
+Site coefficients.}
+
+\item{\code{overwrite}}{(`locigal(1L)`)\cr
+Overwrite coefficients if already set.}
 }
 \if{html}{\out{</div>}}
 }

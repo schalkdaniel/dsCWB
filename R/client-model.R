@@ -296,6 +296,14 @@ ClientModel = R6Class("ClientModel",
 
       if (private$p_task == "bin-class")
         return(ifelse(private$getTargetRaw(type) == private$p_positive, 1, 0))
+    },
+
+    #' @description
+    #' Get the number of rows per train and validation set.
+    getTrainValObs = function() {
+      return(list(
+        ntrain = length(private$p_train_idx),
+        nval = length(private$p_val_idx)))
     }
   ),
   active = list(

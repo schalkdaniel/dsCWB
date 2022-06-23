@@ -150,6 +150,8 @@ transChar = function(x) {
 #'   Name of the positive class in binary classification.
 #' @param seed (`numeric(1L)`)\cr
 #'   Seed for generating validation data (only applies when val_fraction is set).
+#' @param trace (`logical(1L)`)\cr
+#'   Indicator if the fitting trace should be printed or not.
 #' @return Client model of R6 class ClientModel.
 #' @importFrom DSI datashield.aggregate datashield.assign
 #' @examples
@@ -205,7 +207,7 @@ transChar = function(x) {
 #' @export
 dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L,
   learning_rate = 0.1, df = 5, nknots = 20L, ord = 3L, derivs = 2L, val_fraction = NULL,
-  patience = NULL, eps_for_break = NULL, positive = NULL, seed = NULL) {
+  patience = NULL, eps_for_break = NULL, positive = NULL, seed = NULL, trace = TRUE) {
 
   checkConnection(connections)
 
@@ -268,7 +270,6 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   winit = datashield.aggregate(connections, w_opt_const)
 
   co = weighted.mean(x = unlist(cinit), w = unlist(winit) / Reduce("+", winit))
-  #co = Reduce("mean", cinit)
 
   cl_site_const_init = paste0("initSiteConstant(", mchar, ", ", co, ")")
   eval(parse(text = paste0("cq_cinit = quote(", cl_site_const_init, ")")))
@@ -337,47 +338,17 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
     if (trace) {
       lline = hm$getLog(k)
       vrisk = ""
+      ctime = paste0("[", Sys.time(), "] ")
       if (! is.na(lline$risk_val)) vrisk = paste0("risk (val) = ", round(lline$risk_val, 4), ", ")
-      cat(lline$iteration, ": risk (train) = ", lline$risk_train, ", ", vrisk, "base learner = ", lline$bl, " (",
-        lline$effect_type, ", ", round(lline$sse, 4), ")\n", sep = "")
+      cat(ctime, " ", lline$iteration, ": risk (train) = ", lline$risk_train, ", ", vrisk,
+        "base learner = ", lline$bl, " (", lline$effect_type, ", ", round(lline$sse, 4), ")\n", sep = "")
     }
 
     risk_old = risk_train
     k = k + 1
-
   }
   site_params = datashield.aggregate(connections, paste0("getClientModelCoefficients(", mchar, ")"))
   hm$setSiteCoefficients(site_params)
   return(hm)
-
-  ## Initialize client models:
-  #datashield.assign(createClientModel())
-  # Get XtX
-  #datashield.aggregate()
-
-
-  # Initialize host and client model
-
-  # Initialize clients:
-  # - Initialze prediction (loss optimal constant)
-  # - Initialize base learner (e.g. share min/max vlaues for knots calculation)
-  # - share XtX
-  # Initialize host by aggregating XtX
-
-  #while (is_not_finished) {
-
-  # fit shared effects (host model)
-  # fit client models
-
-  # share SSE
-  # select SSE
-  # update host or client models
-  # share validation loss
-  # Check if algo should be stopped
-
-  # After stop:
-  # - Return params from clinet models
-  # -
-  # }
 }
 

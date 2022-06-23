@@ -43,11 +43,11 @@ df = 5
 nknots = 20L
 ord = 3L
 derivs = 2L
-val_fraction = NULL
+val_fraction = 0.1
 patience = NULL
 eps_for_break = NULL
 positive = NULL
-seed = NULL
+seed = 31415
 
 datashield.logout(connections)
 

@@ -35,7 +35,8 @@ AggregateMethods:
     getOptimalConstant,
     getClientTaskType,
     getClientNrow,
-    getClientModelCoefficients
+    getClientModelCoefficients,
+    getClientTrainValObs
 AssignMethods:
     createClientModel,
     initClientModel,

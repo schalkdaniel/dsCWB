@@ -199,6 +199,18 @@ getClientSSE = function(model_symbol = "cwb", par_list_binary = NULL) {
   return(cm$getSSE(par_list_binary = par_list_binary))
 }
 
+#' @title Get the number of rows per train and validation set.
+#' @param model_symbol (`character(1L)`)\cr
+#'   The name of the model at the server.
+#' @return Number of observation in the train and validation set.
+#' @export
+getClientTrainValObs = function(model_symbol = "cwb") {
+  checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
+
+  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  return(cm$getTrainValObs())
+}
+
 #' @title Get the model coefficients.
 #' @param model_symbol (`character(1L)`)\cr
 #'   The name of the model at the server.
