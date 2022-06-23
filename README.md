@@ -11,8 +11,8 @@ v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.or
 
 The package provides functionality to conduct and visualize
 component-wise boosting on decentralized data. The basis is the
-DataSHIELD\](<https://www.datashield.org/>) infrastructure for
-distributed computing. This package provides the calculation of the
+[DataSHIELD](https://www.datashield.org/) infrastructure for distributed
+computing. This package provides the calculation of the
 [**component-wise
 boosting**](https://www.tandfonline.com/doi/abs/10.1198/016214503000125).
 Note that DataSHIELD uses an option `datashield.privacyLevel` to
