@@ -119,6 +119,29 @@ transChar = function(x) {
   return(paste(cchar, collapse = ", "))
 }
 
+calculateDF = function(xtxs, hm, df) {
+  checkmate::assertList(xtxs)
+  checkmate:::assertR6(hm, "HostModel")
+  checkmate::assertNumeric(df, lower = 1, len = 1L, any.missing = FALSE)
+
+  bls = hm$bls
+  blnames = names(bls)
+  pens = list()
+
+  for (bln in blnames) {
+    llmat = list()
+    llpen = list()
+    for (sn in names(xtxs)) {
+      llmat[[sn]] = xtxs[[sn]][[bln]]
+      llpen[[sn]] = bls[[bln]]$getPenaltyMat()
+    }
+    xtx_tensor = Matrix::bdiag(llmat)
+    penmat_tensor = Matrix::bdiag(llpen)
+    pens[[bln]] = compboostSplines::demmlerReinsch(as.matrix(xtx_tensor), as.matrix(penmat_tensor), df)
+  }
+  return(pens)
+}
+
 #' @title Train a distributed CWB model.
 #' @param connections (`list(OpalConnection)`)\cr
 #'   Connections to the DataSHIELD servers (see `?DSI::newDSLoginBuilder`).
@@ -285,6 +308,9 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   # Init host model:
   hm$setOffset(co)
   hm$addBaselearners(cli, ll_xtx)
+
+  penalty_adjusted = calculateDF(xtxs, hm, df)
+  datashield.assign(connections, model_symbol, updateClientPenalty(mchar, encodeObject(penalty_adjusted)))
 
   # Training the model:
   train_iter = TRUE

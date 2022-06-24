@@ -240,6 +240,23 @@ ClientModel = R6Class("ClientModel",
     },
 
     #' @description
+    #' Re-set the penalty terms.
+    #' @param ll_pen (`list()`)\cr
+    #'   Named list with new penalty terms.
+    updatePenalty = function(ll_pen) {
+      checkmate::assertList(ll_pen)
+
+      blnames = names(ll_pen)
+      blnames0 = names(private$p_bls)
+
+      nuisance = lapply(blnames, checkmate::assertChoice, choices = blnames0)
+
+      for (bln in blnames) {
+        private$p_bls[[bln]]$updatePenalty(ll_pen[[bln]])
+      }
+    },
+
+    #' @description
     #' Add base learners to the model.
     #' @param ll_init (`list()`)\cr
     #'   List containing the initialization parameters.
@@ -391,22 +408,3 @@ ClientModel = R6Class("ClientModel",
     p_loss = NULL
   )
 )
-
-if (FALSE) {
-  Class = R6Class("Class",
-    public = list(
-      a = NULL,
-      initialize = function(a) self$a = a
-    )
-  )
-  test = function(x) {
-    tmp = eval(parse(text = "cl"), envir = .GlobalEnv)
-    cl$a = x
-    rm(cl)
-  }
-
-  cl = Class$new(10)
-  cl$a
-  test(2)
-  cl$a
-}

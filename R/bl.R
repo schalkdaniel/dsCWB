@@ -254,6 +254,15 @@ BlSpline = R6Class("BlSpline",
     },
 
     #' @description
+    #' Re-set the penalty terms.
+    #' @param pen (`numeric(1)`)\cr
+    #'   New penalty terms.
+    updatePenalty = function(pen) {
+      checkmate::assertNumeric(pen, len = 1L, lower = 0, any.missing = FALSE)
+      private$p_penalty = pen
+    },
+
+    #' @description
     #' Get feature name.
     getFeature = function() {
       return(private$p_feature)

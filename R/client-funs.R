@@ -75,6 +75,23 @@ getRisk = function(model_symbol, risk_type = "train") {
   return(cm$getRisk(risk_type))
 }
 
+#' @title Update the penalties of the client models.
+#' @param model_symbol (`character(1L)`)\cr
+#'   The name of the model at the server.
+#' @param ll_pen_binary (`character(1L)`)\cr
+#'   Named list with new penalty terms encoded by `encodeObject`.
+#' @export
+updateclientPenalty = function(model_symbol, ll_pen_binary) {
+  checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
+  checkmate::assertCharacter(ll_pen_binary, len = 1L, any.missing = FALSE)
+
+  ll_pen = decodeBinary(ll_pen_binary)
+  checkmate::assertList(ll_pen)
+
+  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  cm$updatePenalty(ll_pen)
+  return(cm)
+}
 
 #' @title Initialize client model with constant.
 #' @param model_symbol (`character(1L)`)\cr
