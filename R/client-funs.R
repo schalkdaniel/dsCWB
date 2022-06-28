@@ -81,7 +81,7 @@ getRisk = function(model_symbol, risk_type = "train") {
 #' @param ll_pen_binary (`character(1L)`)\cr
 #'   Named list with new penalty terms encoded by `encodeObject`.
 #' @export
-updateclientPenalty = function(model_symbol, ll_pen_binary) {
+updateClientPenalty = function(model_symbol, ll_pen_binary) {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
   checkmate::assertCharacter(ll_pen_binary, len = 1L, any.missing = FALSE)
 
@@ -91,6 +91,16 @@ updateclientPenalty = function(model_symbol, ll_pen_binary) {
   cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
   cm$updatePenalty(ll_pen)
   return(cm)
+}
+
+#' @title Update the penalties of the client models.
+#' @param model_symbol (`character(1L)`)\cr
+#'   The name of the model at the server.
+#' @export
+getBlHyperpars = function(model_symbol) {
+  checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
+  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  return(lapply(cm$bls, function(bl) bl$getHyperpars()))
 }
 
 #' @title Initialize client model with constant.

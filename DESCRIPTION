@@ -36,11 +36,13 @@ AggregateMethods:
     getClientTaskType,
     getClientNrow,
     getClientModelCoefficients,
-    getClientTrainValObs
+    getClientTrainValObs,
+    getBlHyperpars
 AssignMethods:
     createClientModel,
     initClientModel,
     initSiteConstant,
-    updateClientBaselearner
+    updateClientBaselearner,
+    updateClientPenalty
 Options: datashield.privacyLevel=5
 RoxygenNote: 7.1.1

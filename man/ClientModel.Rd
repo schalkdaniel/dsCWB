@@ -34,6 +34,7 @@ List of base learner.}
 \item \href{#method-getBlParams}{\code{ClientModel$getBlParams()}}
 \item \href{#method-updateCWBParts}{\code{ClientModel$updateCWBParts()}}
 \item \href{#method-update}{\code{ClientModel$update()}}
+\item \href{#method-updatePenalty}{\code{ClientModel$updatePenalty()}}
 \item \href{#method-addBaselearners}{\code{ClientModel$addBaselearners()}}
 \item \href{#method-getFeatureNames}{\code{ClientModel$getFeatureNames()}}
 \item \href{#method-getPrediction}{\code{ClientModel$getPrediction()}}
@@ -274,6 +275,24 @@ Update the model by adding a base learner.
 \describe{
 \item{\code{blname}}{(`character(1L)`)\cr
 Character containing the base learner name.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-updatePenalty"></a>}}
+\if{latex}{\out{\hypertarget{method-updatePenalty}{}}}
+\subsection{Method \code{updatePenalty()}}{
+Re-set the penalty terms.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ClientModel$updatePenalty(ll_pen)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{ll_pen}}{(`list()`)\cr
+Named list with new penalty terms.}
 }
 \if{html}{\out{</div>}}
 }

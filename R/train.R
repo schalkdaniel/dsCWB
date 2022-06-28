@@ -310,7 +310,10 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   hm$addBaselearners(cli, ll_xtx)
 
   penalty_adjusted = calculateDF(xtxs, hm, df)
-  datashield.assign(connections, model_symbol, updateClientPenalty(mchar, encodeObject(penalty_adjusted)))
+  eval(parse(text = paste0("cl_pen_update = quote(updateClientPenalty(", mchar, ", ",
+    transChar(encodeObject(penalty_adjusted)), "))")))
+
+  datashield.assign(connections, model_symbol, cl_pen_update)
 
   # Training the model:
   train_iter = TRUE
