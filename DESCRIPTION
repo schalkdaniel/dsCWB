@@ -43,6 +43,7 @@ AssignMethods:
     initClientModel,
     initSiteConstant,
     updateClientBaselearner,
-    updateClientPenalty
+    updateClientPenalty,
+    dsNaRm
 Options: datashield.privacyLevel=5
 RoxygenNote: 7.1.1

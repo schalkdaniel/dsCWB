@@ -37,6 +37,8 @@ check2 = opalr::dsadmin.publish_package(opal = opal, pkg = "dsCWB")
 if (! check2)
   stop("[", Sys.time(), "] Was not able to publish methods of dsCWB!")
 }
+
+opalr::opal.logout(opal)
 ```
 
 [![Actions Status](https://github.com/schalkdaniel/dsCWB/workflows/R-CMD-check/badge.svg)](https://github.com/schalkdaniel/dsCWB/actions) [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://www.gnu.org/licenses/lgpl-3.0) [![codecov](https://codecov.io/gh/schalkdaniel/dsCWB/branch/main/graph/badge.svg?token=0K9P2WBKNH)](https://codecov.io/gh/schalkdaniel/dsCWB)
@@ -61,4 +63,62 @@ It is necessary to register the assign and aggregate methods in the OPAL adminis
 Note that the package needs to be installed at both locations, the server and the analysts machine.
 
 
+## Usage
 
+```{r}
+# devtools::load_all()
+
+library(DSI)
+library(DSOpal)
+
+builder = newDSLoginBuilder()
+
+builder$append(
+  server   = "server1",
+  url      = surl,
+  user     = username,
+  password = password,
+  table    = "CNSIM.CNSIM1"
+)
+builder$append(
+  server   = "server2",
+  url      = surl,
+  user     = username,
+  password = password,
+  table    = "CNSIM.CNSIM2"
+)
+builder$append(
+  server   = "server3",
+  url      = surl,
+  user     = username,
+  password = password,
+  table    = "CNSIM.CNSIM3"
+)
+connections = datashield.login(logins = builder$build(), assign = TRUE)
+datashield.symbols(connections)
+
+datashield.assign(connections, "Dclean", quote(dsNaRm("D")))
+datashield.symbols(connections)
+
+symbol = "Dclean"
+target = "LAB_TSC"
+feature_names = setdiff(dsBaseClient::ds.names("D", connections)[[1]], target)
+
+cwb = dsCWB(connections, "Dclean", target, feature_names, mstop = 20L,
+  val_fraction = 0.1, patience = 5L, eps_for_break = 0.1, seed = 31415L)
+
+mstop = 20L
+learning_rate = 0.1
+df = 5
+nknots = 20L
+ord = 3L
+derivs = 2L
+val_fraction = 0.1
+patience = 5
+eps_for_break = 0.1
+positive = NULL
+seed = 31415
+trace = TRUE
+
+datashield.logout(connections)
+```

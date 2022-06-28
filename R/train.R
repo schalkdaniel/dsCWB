@@ -244,7 +244,7 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   checkmate::assertIntegerish(x = ord, len = 1L, any.missing = FALSE)
   checkmate::assertIntegerish(x = derivs, len = 1L, any.missing = FALSE)
   checkmate::assertNumeric(val_fraction, lower = 0, upper = 1, len = 1L, any.missing = FALSE, null.ok = TRUE)
-  checkmate::assertCount(x = patience, null.ok = TRUE)
+  checkmate::assertCount(x = patience, null.ok = TRUE, positive = TRUE)
   checkmate::assertNumeric(x = eps_for_break, lower = 0, upper = 1, len = 1L, any.missing = FALSE, null.ok = TRUE)
   checkmate::assertCharacter(x = positive, len = 1L, any.missing = FALSE, null.ok = TRUE)
   checkmate::assertCount(x = seed, null.ok = TRUE)
@@ -367,11 +367,6 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
     # Determine stopping criteria:
     if (is.null(eps_for_break))
       eps_for_break = -Inf
-
-    if (is.infinite(risk_old))
-      train_eps = 1
-    else
-      train_eps = (risk_old - risk_train) / risk_old
 
     if (k >= mstop) train_iter = FALSE
 

@@ -1,3 +1,15 @@
+#' @title Remove all rows that contain missing values.
+#' @param symbol (`character(1L)`)\cr
+#'   Symbol specifying something.
+#' @export
+dsNaRm = function(symbol) {
+  checkmate::assertCharacter(symbol, len = 1L, any.missing = FALSE)
+  checkSymbol(symbol)
+
+  x = eval(parse(text = symbol), envir = .GlobalEnv)
+  return(na.omit(x))
+}
+
 #' @title Check if symbol is present in global envir.
 #' @param symbol (`character(1L)`)\cr
 #'   Symbol specifying something.
@@ -8,6 +20,8 @@ checkSymbol = function(symbol) {
   e = try(eval(parse(text = symbol), envir = .GlobalEnv), silent = TRUE)
   if (inherits(e, "try-error"))
     stop("Cannot find symbol ", symbol, " in .GlobalEnv")
+
+  return(NULL)
 }
 
 #' @title Get the task type.
