@@ -3,10 +3,10 @@ aggregateInit = function(ll_init) {
   fn = names(ll_init[[1]])
   ll_out = list()
   for (f in fn) {
+    mm = c()
+    ma = c()
+    cls = c()
     for (s in ss) {
-      mm = c()
-      ma = c()
-      cls = c()
       if (ll_init[[s]][[f]]$class == "numeric") {
         mm = min(mm, ll_init[[s]][[f]]$min)
         ma = max(ma, ll_init[[s]][[f]]$max)
@@ -314,6 +314,7 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
     transChar(encodeObject(penalty_adjusted)), "))")))
 
   datashield.assign(connections, model_symbol, cl_pen_update)
+  # datashield.aggregate(connections, quote(getBlHyperpars("cm")))
 
   # Training the model:
   train_iter = TRUE

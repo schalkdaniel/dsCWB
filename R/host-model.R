@@ -224,6 +224,40 @@ HostModel = R6Class("HostModel",
         }
       }
 
+    },
+
+    #' @description
+    #' Predict individual contribution of new data.
+    #' @param newdata (`data.frame()`)\cr
+    #'   New data.
+    predictIndividual = function(newdata) {
+      checkmate::assertDataFrame(newdata)
+
+      shared = lapply(private$p_bls, function(bl) bl$predictNewdata(newdata))
+      sites = lapply(names(private$p_site_coefs), function(s) {
+        lapply(names(private$p_bls), function(bln) {
+          private$p_bls[[bln]]$predict(newdata, private$p_site_coefs[[bln]])
+        })
+      })
+      return(list(shared = shared, site = sites))
+    },
+
+    #' @description
+    #' Predict on new data.
+    #' @param newdata (`data.frame()`)\cr
+    #'   New data.
+    #' @param site (`character(1L)`)\cr
+    #'   Indicator for which site the prediction should be calculated.
+    predict = function(newdata, site = NULL) {
+      checkmate::assertDataFrame(newdata)
+      checkmate::assertChoice(site, choices = names(private$p_site_coefs))
+
+      pind = self$predictIndividual(newdata)
+
+      p1 = Reduce("+", pind$shared)
+      p2 = Reduce("+", pind$site[[site]])
+
+      return(private$p_offset + p1 + p2)
     }
   ),
   active = list(

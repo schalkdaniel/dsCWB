@@ -66,10 +66,14 @@ Note that the package needs to be installed at both locations, the server and th
 ## Usage
 
 ```{r}
-# devtools::load_all()
+devtools::load_all()
 
 library(DSI)
 library(DSOpal)
+
+surl     = "https://opal-demo.obiba.org/"
+username = "administrator"
+password = "password"
 
 builder = newDSLoginBuilder()
 
@@ -100,13 +104,43 @@ datashield.symbols(connections)
 datashield.assign(connections, "Dclean", quote(dsNaRm("D")))
 datashield.symbols(connections)
 
+dsBaseClient::ds.dim("D")
+dsBaseClient::ds.dim("Dclean")
+
 symbol = "Dclean"
 target = "LAB_TSC"
 feature_names = setdiff(dsBaseClient::ds.names("D", connections)[[1]], target)
 
+time = Sys.time()
 cwb = dsCWB(connections, "Dclean", target, feature_names, mstop = 20L,
   val_fraction = 0.1, patience = 5L, eps_for_break = 0.1, seed = 31415L)
+time = Sys.time() - time
 
+l = cwb$getLog()
+l$minutes = as.numeric(difftime(l$time, l$time[1], units = "mins"))
+
+library(ggplot2)
+
+ggplot(l, aes(x = minutes)) +
+  geom_line(aes(y = risk_train, color = "Train risk")) +
+  geom_line(aes(y = risk_val, color = "Val risk"))
+
+table(l$bl)
+table(l$effect_type)
+
+newdata = na.omit(read.csv("~/Downloads/data.csv"))[1:10, ]
+cwb$predictIndividual(newdata)
+cwb$predict(newdata)
+
+vt = newdata[[target]]
+
+
+
+
+
+
+
+cwb$get
 mstop = 20L
 learning_rate = 0.1
 df = 5

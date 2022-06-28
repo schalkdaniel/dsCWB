@@ -228,7 +228,10 @@ BlSpline = R6Class("BlSpline",
         private$p_nknots, private$p_ord)
 
       if (is.null(par)) {
-        out = design %*% private$p_param
+        if (is.null(private$p_param))
+          out = rep(0, nrow(design))
+        else
+          out = design %*% private$p_param
       } else {
         out = design %*% par
       }
