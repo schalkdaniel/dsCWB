@@ -41,6 +41,9 @@ List of estimated parameters.}
 \item \href{#method-log}{\code{HostModel$log()}}
 \item \href{#method-getLog}{\code{HostModel$getLog()}}
 \item \href{#method-setSiteCoefficients}{\code{HostModel$setSiteCoefficients()}}
+\item \href{#method-predictIndividual}{\code{HostModel$predictIndividual()}}
+\item \href{#method-predict}{\code{HostModel$predict()}}
+\item \href{#method-featureEffectData}{\code{HostModel$featureEffectData()}}
 \item \href{#method-clone}{\code{HostModel$clone()}}
 }
 }
@@ -276,6 +279,66 @@ Site coefficients.}
 
 \item{\code{overwrite}}{(`locigal(1L)`)\cr
 Overwrite coefficients if already set.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-predictIndividual"></a>}}
+\if{latex}{\out{\hypertarget{method-predictIndividual}{}}}
+\subsection{Method \code{predictIndividual()}}{
+Predict individual contribution of new data.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HostModel$predictIndividual(newdata)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{newdata}}{(`data.frame()`)\cr
+New data.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-predict"></a>}}
+\if{latex}{\out{\hypertarget{method-predict}{}}}
+\subsection{Method \code{predict()}}{
+Predict on new data.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HostModel$predict(newdata, site = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{newdata}}{(`data.frame()`)\cr
+New data.}
+
+\item{\code{site}}{(`character(1L)`)\cr
+Indicator for which site the prediction should be calculated.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-featureEffectData"></a>}}
+\if{latex}{\out{\hypertarget{method-featureEffectData}{}}}
+\subsection{Method \code{featureEffectData()}}{
+Visualize the feature effect.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HostModel$featureEffectData(feature, npoints = 100L)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{feature}}{(`character(1L)`)\cr
+Name of the feature to visualize.}
+
+\item{\code{npoints}}{(`integer(1L)`)\cr
+Number of points used to visualize numerical features.}
 }
 \if{html}{\out{</div>}}
 }

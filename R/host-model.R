@@ -110,6 +110,19 @@ HostModel = R6Class("HostModel",
 
           private$p_bls[[blname]] = bl
         }
+        if (ll_init[[ff]]$class == "categorical") {
+          blname = paste0(ff, "-onehot")
+
+          bl = BlOneHot$new(ll_init[[ff]]$table)
+          if (private$p_df > length(ll_init[[ff]]$table))
+            df = length(ll_init[[ff]]$table)
+          else
+            df = private$p_df
+
+          bl$initDataXtX(ff, df, as.matrix(ll_xtx[[blname]]))
+
+          private$p_bls[[blname]] = bl
+        }
       }
     },
 
@@ -235,10 +248,13 @@ HostModel = R6Class("HostModel",
 
       shared = lapply(private$p_bls, function(bl) bl$predictNewdata(newdata))
       sites = lapply(names(private$p_site_coefs), function(s) {
-        lapply(names(private$p_bls), function(bln) {
-          private$p_bls[[bln]]$predict(newdata, private$p_site_coefs[[bln]])
+        out = lapply(names(private$p_bls), function(bln) {
+          return(private$p_bls[[bln]]$predictNewdata(newdata, private$p_site_coefs[[s]][[bln]]))
         })
+        names(out) = names(private$p_bls)
+        return(out)
       })
+      names(sites) = names(private$p_site_coefs)
       return(list(shared = shared, site = sites))
     },
 
@@ -258,6 +274,49 @@ HostModel = R6Class("HostModel",
       p2 = Reduce("+", pind$site[[site]])
 
       return(private$p_offset + p1 + p2)
+    },
+
+    #' @description
+    #' Visualize the feature effect.
+    #' @param feature (`character(1L)`)\cr
+    #'   Name of the feature to visualize.
+    #' @param npoints (`integer(1L)`)\cr
+    #'   Number of points used to visualize numerical features.
+    featureEffectData = function(feature, npoints = 100L) {
+      checkmate::assertChoice(feature, choices = private$p_feature_names)
+      checkmate::assertIntegerish(npoints, lower = 10L, len = 1L, any.missing = FALSE)
+
+      blnames = names(private$p_bls)
+      bln = blnames[grepl(feature, blnames)]
+      if (is.null(private$p_log)) stop("Fitting was not started yet.")
+      if (! bln %in% unique(private$p_log$bl)) stop("Base learner was not selected")
+
+      bl  = private$p_bls[[bln]]
+      if (bl$getType() == "numeric") {
+        xmin = bl$getKnotRange()[1]
+        xmax = bl$getKnotRange()[2]
+        xnew = seq(xmin, xmax, length.out = npoints)
+        X = bl$basisTrafo(xnew)
+
+        shared = NA
+        if (! is.null(bl$getParam())) {
+          shared = data.frame(pred = as.numeric(X %*% bl$getParam()),
+            value = xnew, effect_type = "shared", bl = bln, server = "host")
+        }
+        sites = NA
+        if (! is.null(private$p_site_coefs[[1]][[bln]])) {
+          sites = lapply(names(private$p_site_coefs), function(s) {
+            data.frame(pred = as.numeric(X %*% private$p_site_coefs[[s]][[bln]]),
+              value = xnew, effect_type = "site", bl = bln, server = s)
+          })
+          sites = do.call(rbind, sites)
+        }
+        if (is.na(shared[[1]][1]) && is.na(sites[[1]][1]))
+          stop("Could not find any coefficient for shared or site effects.")
+
+        pdata = na.omit(rbind(shared, sites))
+      }
+      return(pdata)
     }
   ),
   active = list(

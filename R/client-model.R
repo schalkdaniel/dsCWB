@@ -267,6 +267,9 @@ ClientModel = R6Class("ClientModel",
         if (is.numeric(x)) {
           private$addBlNumeric(ff, paste0(ff, "-spline"), ll_init[[ff]]$min, ll_init[[ff]]$max)
         }
+        if (is.character(x) || is.factor(x)) {
+          private$addBlCategorical(ff, paste0(ff, "-onehot"), ll_init[[ff]]$table)
+        }
       }
     },
 
@@ -376,7 +379,7 @@ ClientModel = R6Class("ClientModel",
     #   Minimum value of inner knots.
     # @param knots_max (`numeric(1L)`)\cr
     #   Maximum value of inner knots.
-    addBlNumeric = function(feature, blname, knots_min, knots_max, df = NULL) {
+    addBlNumeric = function(feature, blname, knots_min, knots_max) {
       checkmate::assertCharacter(x = feature, len = 1L, any.missing = FALSE)
       checkmate::assertNumeric(x = knots_min, len = 1L, null.ok = FALSE)
       checkmate::assertNumeric(x = knots_max, len = 1L, null.ok = FALSE)
@@ -384,6 +387,32 @@ ClientModel = R6Class("ClientModel",
       x = private$getFeatureFromData(feature)
       bl = BlSpline$new(knots_min, knots_max, private$p_nknots, private$p_ord, private$p_derivs)
       bl$initData(x, feature, private$p_df, private$p_val_idx)
+
+      private$p_bls[[blname]] = bl
+    },
+
+    # @description
+    # Add a categorical base learner.
+    #
+    # @param feature (`character(1L)`)\cr
+    #   Character containing the feature name.
+    # @param blname (`character(1L)`)\cr
+    #   Base learner name (id used for references).
+    # @param dict (`character()`)\cr
+    #   Unique categories of the feature.
+    addBlCategorical = function(feature, blname, dict) {
+      checkmate::assertCharacter(x = feature, len = 1L, any.missing = FALSE)
+      checkmate::assertCharacter(x = blname, len = 1L, any.missing = FALSE)
+      checkmate::assertCharacter(x = dict, any.missing = FALSE)
+
+      x = as.character(private$getFeatureFromData(feature))
+      bl = BlOneHot$new(dict)
+      if (private$p_df > length(dict))
+        df = length(dict)
+      else
+        df = private$p_df
+
+      bl$initData(x, feature, df)
 
       private$p_bls[[blname]] = bl
     },

@@ -66,6 +66,9 @@ Note that the package needs to be installed at both locations, the server and th
 ## Usage
 
 ```{r}
+
+q()
+R
 devtools::load_all()
 
 library(DSI)
@@ -112,8 +115,8 @@ target = "LAB_TSC"
 feature_names = setdiff(dsBaseClient::ds.names("D", connections)[[1]], target)
 
 time = Sys.time()
-cwb = dsCWB(connections, "Dclean", target, feature_names, mstop = 20L,
-  val_fraction = 0.1, patience = 5L, eps_for_break = 0.1, seed = 31415L)
+cwb = dsCWB(connections, "Dclean", target, feature_names, mstop = 10L,
+  val_fraction = 0.1, patience = 5L, eps_for_break = 0, seed = 31415L)
 time = Sys.time() - time
 
 l = cwb$getLog()
@@ -130,9 +133,16 @@ table(l$effect_type)
 
 newdata = na.omit(read.csv("~/Downloads/data.csv"))[1:10, ]
 cwb$predictIndividual(newdata)
-cwb$predict(newdata)
+pred = cwb$predict(newdata, "server1")
+truth = newdata[[target]]
 
-vt = newdata[[target]]
+dval = data.frame(pred, truth)
+ggplot(dval, aes(x = pred, y = truth)) + geom_point()
+
+pdata = cwb$featureEffectData("LAB_TRIG")
+
+ggplot(pdata, aes(x = value, y = pred, color = server, linetype = effect_type)) +
+  geom_line()
 
 
 

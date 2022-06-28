@@ -230,7 +230,7 @@ calculateDF = function(xtxs, hm, df) {
 #' @export
 dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L,
   learning_rate = 0.1, df = 5, nknots = 20L, ord = 3L, derivs = 2L, val_fraction = NULL,
-  patience = NULL, eps_for_break = NULL, positive = NULL, seed = NULL, trace = TRUE) {
+  patience = NULL, eps_for_break = 0, positive = NULL, seed = NULL, trace = TRUE) {
 
   checkConnection(connections)
 
@@ -321,9 +321,9 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   risk_old = Inf
   k = 1
   if (all(! is.null(patience), ! is.null(eps_for_break), ! is.null(val_fraction))) {
+    p0 = 0
     early_stop = TRUE
     risk_val_old = Inf
-    p0 = 0
   }
 
   while (train_iter) {
@@ -365,12 +365,10 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
     }
 
 
-    # Determine stopping criteria:
-    if (is.null(eps_for_break))
-      eps_for_break = -Inf
-
+    # Stop if maximal number of iterations is reached:
     if (k >= mstop) train_iter = FALSE
 
+    # Stop if early stopping hits:
     if (early_stop) {
       if (is.infinite(risk_val_old))
         val_eps = 1
@@ -388,13 +386,17 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
     if (trace) {
       lline = hm$getLog(k)
       vrisk = ""
+      pstring = ""
+
       ctime = paste0("[", Sys.time(), "] ")
       if (! is.na(lline$risk_val)) vrisk = paste0("risk (val) = ", round(lline$risk_val, 4), ", ")
+      if (early_stop) pstring = paste0("patience = ", p0)
       cat(ctime, " ", lline$iteration, ": risk (train) = ", lline$risk_train, ", ", vrisk,
-        "base learner = ", lline$bl, " (", lline$effect_type, ", ", round(lline$sse, 4), ")\n", sep = "")
+        "bl = ", lline$bl, " (", lline$effect_type, ", ", round(lline$sse, 4), "), ",
+        pstring, "\n", sep = "")
     }
 
-    risk_old = risk_train
+    risk_val_old = risk_val
     k = k + 1
   }
   site_params = datashield.aggregate(connections, paste0("getClientModelCoefficients(", mchar, ")"))

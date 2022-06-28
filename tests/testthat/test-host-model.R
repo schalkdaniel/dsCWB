@@ -1,14 +1,5 @@
 context("Host model")
 
-#git add --all
-#git commit -m "updates [ci skip]"
-#git push origin main
-
-#q()
-#R
-#library(testthat)
-#devtools::load_all()
-
 test_that("host model can be initialized correctly",  {
   symbol = "iris"
   target = "Sepal.Width"
@@ -66,4 +57,5 @@ test_that("update step is working", {
 
   expect_null(hm$bls[[2]]$getParam())
   expect_null(hm$bls[[3]]$getParam())
+  expect_null(hm$bls[[4]]$getParam())
 })

@@ -52,19 +52,27 @@ test_that("client model initializes correctly", {
     expect_equal(pred, bl$predict(par))
     expect_equal(par, bl$train(cm$getPseudoResids()))
     sse = sum((cm$getPseudoResids() - pred)^2)
-    expect_equal(ll_xtx[[paste0(bl$getFeature(), "-spline")]], XtX)
-    expect_equal(ll_xty[[paste0(bl$getFeature(), "-spline")]], Xty)
-    expect_equal(cm$getSSE()$from_bl[[paste0(bl$getFeature(), "-spline")]], sse)
+    if (bl$getType() == "numeric") {
+      addon = "-spline"
+    } else {
+      addon = "-onehot"
+    }
+
+    expect_equal(ll_xtx[[paste0(bl$getFeature(), addon)]], XtX)
+    expect_equal(ll_xty[[paste0(bl$getFeature(), addon)]], Xty)
+    expect_equal(cm$getSSE()$from_bl[[paste0(bl$getFeature(), addon)]], sse)
   }
 
   pennew = lapply(cm$bls, function(bl) bl$getHyperpars()$penalty)
   pennew[[1]] = 1
   pennew[[2]] = 2
   pennew[[3]] = 3
+  pennew[[4]] = 1
   expect_silent(cm$updatePenalty(pennew))
   expect_equal(cm$bls[[1]]$getHyperpars()$penalty, 1)
   expect_equal(cm$bls[[2]]$getHyperpars()$penalty, 2)
   expect_equal(cm$bls[[3]]$getHyperpars()$penalty, 3)
+  expect_equal(cm$bls[[4]]$getHyperpars()$penalty, 1)
 
   pennew[["bla"]] = 4
   expect_error(cm$updatePenalty(pennew))

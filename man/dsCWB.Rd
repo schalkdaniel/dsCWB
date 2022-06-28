@@ -17,7 +17,7 @@ dsCWB(
   derivs = 2L,
   val_fraction = NULL,
   patience = NULL,
-  eps_for_break = NULL,
+  eps_for_break = 0,
   positive = NULL,
   seed = NULL,
   trace = TRUE
