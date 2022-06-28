@@ -66,9 +66,6 @@ BlSpline = R6Class("BlSpline",
       checkmate::assertCharacter(x = feature, len = 1L)
       checkmate::assertNumeric(x = df, any.missing = FALSE, len = 1L)
 
-      #x = eval(parse(text = paste0(symbol, "[[\"", feature, "\"]]")))
-      #if (is.null(x)) stop("Feature \"", feature, "\" was not found in ", symbol)
-
       private$p_feature = feature
       private$p_df = df
       private$p_val_idx = val_idx
@@ -288,7 +285,14 @@ BlSpline = R6Class("BlSpline",
     #' Get the base learner type.
     getType = function() {
       return("numeric")
+    },
+
+    #' @description
+    #' Get design matrix.
+    getDesign = function() {
+      return(private$p_design)
     }
+
   ),
   private = list(
     p_knots_min = NULL,
@@ -585,6 +589,12 @@ BlOneHot = R6Class("BlOneHot",
     #' Get the base learner type.
     getType = function() {
       return("categorical")
+    },
+
+    #' @description
+    #' Get design matrix.
+    getDesign = function() {
+      return(private$p_design)
     }
   ),
   private = list(
