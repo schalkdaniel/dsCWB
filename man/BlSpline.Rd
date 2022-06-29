@@ -28,6 +28,7 @@ predictions, fitting parameters, etc.
 \item \href{#method-getHyperpars}{\code{BlSpline$getHyperpars()}}
 \item \href{#method-getParam}{\code{BlSpline$getParam()}}
 \item \href{#method-getType}{\code{BlSpline$getType()}}
+\item \href{#method-getDesign}{\code{BlSpline$getDesign()}}
 \item \href{#method-clone}{\code{BlSpline$clone()}}
 }
 }
@@ -353,6 +354,16 @@ Get parameter vector.
 Get the base learner type.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{BlSpline$getType()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getDesign"></a>}}
+\if{latex}{\out{\hypertarget{method-getDesign}{}}}
+\subsection{Method \code{getDesign()}}{
+Get design matrix.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{BlSpline$getDesign()}\if{html}{\out{</div>}}
 }
 
 }

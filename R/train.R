@@ -121,7 +121,7 @@ transChar = function(x) {
 
 calculateDF = function(xtxs, hm, df) {
   checkmate::assertList(xtxs)
-  checkmate:::assertR6(hm, "HostModel")
+  checkmate::assertR6(hm, "HostModel")
   checkmate::assertNumeric(df, lower = 1, len = 1L, any.missing = FALSE)
 
   bls = hm$bls
@@ -273,6 +273,7 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   ## Create client models:
   ## ======================================
 
+  call_init_client_model = NULL
   eval(parse(text = paste0("call_init_client_model = quote(createClientModel(",
     symchar, ",", tchar, ", c(", fn, ") ,", learning_rate, ", ", df, ", ", nknots, ", ", ord, ", ",
     derivs, ", ", oobchar, ", ", pchar, ", ", schar,
@@ -283,20 +284,24 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   cl_init = datashield.aggregate(connections, call_get_init)
   cli = aggregateInit(cl_init)
 
+  cq = NULL
   call_init = paste0("initClientModel(", mchar, ", \"", encodeObject(cli), "\")")
   eval(parse(text = paste0("cq = quote(", call_init, ")")))
   datashield.assign(connections, model_symbol, cq)
 
+  cl_opt_const = NULL
   eval(parse(text = paste0("cl_opt_const = quote(getOptimalConstant(", mchar ,"))")))
   cinit = datashield.aggregate(connections, cl_opt_const)
 
+  w_opt_const = NULL
   eval(parse(text = paste0("w_opt_const = quote(getClientTrainValObs(", mchar ,"))")))
   winit = datashield.aggregate(connections, w_opt_const)
 
   ntrain = vapply(winit, function(w) w$ntrain, integer(1L))
 
-  co = weighted.mean(x = unlist(cinit), w = unlist(ntrain) / Reduce("+", ntrain))
+  co = stats::weighted.mean(x = unlist(cinit), w = unlist(ntrain) / Reduce("+", ntrain))
 
+  cq_cinit = NULL
   cl_site_const_init = paste0("initSiteConstant(", mchar, ", ", co, ")")
   eval(parse(text = paste0("cq_cinit = quote(", cl_site_const_init, ")")))
   datashield.assign(connections, model_symbol, cq_cinit)
@@ -309,6 +314,7 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   hm$setOffset(co)
   hm$addBaselearners(cli, ll_xtx)
 
+  cl_pen_update = NULL
   penalty_adjusted = calculateDF(xtxs, hm, df)
   eval(parse(text = paste0("cl_pen_update = quote(updateClientPenalty(", mchar, ", ",
     transChar(encodeObject(penalty_adjusted)), "))")))

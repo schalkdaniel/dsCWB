@@ -7,7 +7,7 @@ dsNaRm = function(symbol) {
   checkSymbol(symbol)
 
   x = eval(parse(text = symbol), envir = .GlobalEnv)
-  return(na.omit(x))
+  return(stats::na.omit(x))
 }
 
 #' @title Check if symbol is present in global envir.
