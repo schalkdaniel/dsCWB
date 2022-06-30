@@ -412,7 +412,7 @@ ClientModel = R6Class("ClientModel",
       else
         df = private$p_df
 
-      bl$initData(x, feature, df)
+      bl$initData(x, feature, df, private$p_val_idx)
 
       private$p_bls[[blname]] = bl
     },
