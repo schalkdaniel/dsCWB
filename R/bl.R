@@ -526,6 +526,8 @@ BlOneHot = R6Class("BlOneHot",
 
       x = newdata[[private$p_feature]]
       if (is.null(x)) stop("Feature \"", private$p_feature, "\" was not found in ", newdata)
+      x = as.character(x)
+      if (all(! x %in% names(private$p_dict))) stop("No element of ", private$p_feature, " the newdata is part of the dictionary")
 
       design = self$basisTrafo(x)
 

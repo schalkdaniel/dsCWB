@@ -297,26 +297,29 @@ HostModel = R6Class("HostModel",
         xmax = bl$getKnotRange()[2]
         xnew = seq(xmin, xmax, length.out = npoints)
         X = bl$basisTrafo(xnew)
-
-        shared = NA
-        if (! is.null(bl$getParam())) {
-          shared = data.frame(pred = as.numeric(X %*% bl$getParam()),
-            value = xnew, effect_type = "shared", bl = bln, server = "host")
-        }
-        sites = NA
-        if (! is.null(private$p_site_coefs[[1]][[bln]])) {
-          sites = lapply(names(private$p_site_coefs), function(s) {
-            data.frame(pred = as.numeric(X %*% private$p_site_coefs[[s]][[bln]]),
-              value = xnew, effect_type = "site", bl = bln, server = s)
-          })
-          sites = do.call(rbind, sites)
-        }
-        if (is.na(shared[[1]][1]) && is.na(sites[[1]][1]))
-          stop("Could not find any coefficient for shared or site effects.")
-
-        pdata = na.omit(rbind(shared, sites))
       }
-      return(pdata)
+      if (bl$getType() == "categorical") {
+        xnew = names(bl$getDictionary())
+        X = bl$basisTrafo(xnew)
+      }
+
+      shared = NA
+      if (! is.null(bl$getParam())) {
+        shared = data.frame(pred = as.numeric(X %*% bl$getParam()),
+          value = xnew, effect_type = "shared", bl = bln, server = "host")
+      }
+      sites = NA
+      if (! is.null(private$p_site_coefs[[1]][[bln]])) {
+        sites = lapply(names(private$p_site_coefs), function(s) {
+          data.frame(pred = as.numeric(X %*% private$p_site_coefs[[s]][[bln]]),
+            value = xnew, effect_type = "site", bl = bln, server = s)
+        })
+        sites = do.call(rbind, sites)
+      }
+      if (is.na(shared[[1]][1]) && is.na(sites[[1]][1]))
+        stop("Could not find any coefficient for shared or site effects.")
+
+      return(na.omit(rbind(shared, sites)))
     }
   ),
   active = list(
