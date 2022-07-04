@@ -115,8 +115,8 @@ target = "LAB_TSC"
 feature_names = setdiff(dsBaseClient::ds.names("D", connections)[[1]], target)
 
 time = Sys.time()
-cwb = dsCWB(connections, "Dclean", target, feature_names, mstop = 10L,
-  val_fraction = 0.1, patience = 5L, eps_for_break = 0, seed = 31415L)
+cwb = dsCWB(connections, "Dclean", target, feature_names, mstop = 100L,
+  val_fraction = 0.1, patience = 5L, seed = 31415L)
 time = Sys.time() - time
 
 l = cwb$getLog()
@@ -139,11 +139,16 @@ truth = newdata[[target]]
 dval = data.frame(pred, truth)
 ggplot(dval, aes(x = pred, y = truth)) + geom_point()
 
-pdata = cwb$featureEffectData("LAB_TRIG")
+pdata1 = cwb$featureEffectData("LAB_TRIG")
 
-ggplot(pdata, aes(x = value, y = pred, color = server, linetype = effect_type)) +
+ggplot(pdata1, aes(x = value, y = pred, color = server, linetype = effect_type)) +
   geom_line()
 
+pdata2 = cwb$featureEffectData("GENDER")
+ggplot(pdata2, aes(x = value, y = pred, color = server, linetype = effect_type)) +
+  geom_boxplot() +
+  facet_grid(~ server) +
+  guides(color = "none")
 
 
 
