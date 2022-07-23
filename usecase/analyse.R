@@ -25,14 +25,21 @@ for (i in seq_along(sources)) {
 }
 
 ## Get data of the servers:
-conn = datashield.login(logins = builder$build(), assign = TRUE)
-datashield.symbols(conn)
+connections = datashield.login(logins = builder$build(), assign = TRUE)
+datashield.symbols(connections)
 
 ## Data dimensions per server:
 (ddim = ds.dim("D"))
 
 
+symbol = "D"
+target = "LAB_TSC"
+feature_names = setdiff(dsBaseClient::ds.names("D", connections)[[1]], target)
+
+cwb = dsCWB(connections, symbol, target, feature_names, mstop = 100L,
+  val_fraction = 0.1, patience = 5L, seed = 31415L)
+
+l = cwb$getLog()
 
 
-
-datashield.logout(conn)
+datashield.logout(connections)
