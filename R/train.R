@@ -299,7 +299,7 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
 
   ntrain = vapply(winit, function(w) w$ntrain, integer(1L))
 
-  co = stats::weighted.mean(x = unlist(cinit), w = unlist(ntrain) / Reduce("+", ntrain))
+  co = hm$loss$aggregateInit(unlist(cinit), unlist(ntrain) / Reduce("+", ntrain))
 
   cq_cinit = NULL
   cl_site_const_init = paste0("initSiteConstant(", mchar, ", ", co, ")")

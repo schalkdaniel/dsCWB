@@ -82,7 +82,7 @@ ClientModel = R6Class("ClientModel",
         } else {
           p_positive = unique(tt)[1]
         }
-        private$p_loss = LossBernoulli$new()
+        private$p_loss = LossBinomial$new()
       }
       if (private$p_task == "regression") {
         private$p_loss = LossQuadratic$new()
@@ -315,7 +315,7 @@ ClientModel = R6Class("ClientModel",
       if (private$p_task == "regression") return(private$getTargetRaw(type))
 
       if (private$p_task == "bin-class")
-        return(ifelse(private$getTargetRaw(type) == private$p_positive, 1, 0))
+        return(ifelse(private$getTargetRaw(type) == private$p_positive, 1, -1))
     },
 
     #' @description

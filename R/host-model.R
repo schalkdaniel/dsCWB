@@ -57,6 +57,7 @@ HostModel = R6Class("HostModel",
       private$p_positive = positive
 
       if (target_type == "regression") private$p_loss = LossQuadratic$new()
+      if (target_type == "bin-class") private$p_loss = LossBinomial$new()
     },
 
     #' @description
