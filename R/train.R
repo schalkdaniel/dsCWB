@@ -137,7 +137,7 @@ calculateDF = function(xtxs, hm, df) {
     }
     xtx_tensor = Matrix::bdiag(llmat)
     penmat_tensor = Matrix::bdiag(llpen)
-    pens[[bln]] = compboostSplines::demmlerReinsch(as.matrix(xtx_tensor), as.matrix(penmat_tensor), df)
+    pens[[bln]] = cpsp::demmlerReinsch(as.matrix(xtx_tensor), as.matrix(penmat_tensor), df)
   }
   return(pens)
 }

@@ -16,14 +16,14 @@ Imports:
     checkmate,
     R6,
     Matrix,
-    compboostSplines
+    cpsp
 Suggests:
     DSOpal,
     ggplot2,
     testthat,
     opalr
 Remotes:
-    schalkdaniel/compboostSplines
+    schalkdaniel/cpsp
 AggregateMethods:
     getClientInit,
     getClientXtX,

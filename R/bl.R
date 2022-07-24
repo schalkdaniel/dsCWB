@@ -77,10 +77,10 @@ BlSpline = R6Class("BlSpline",
         private$p_nknots, private$p_ord)
 
       private$p_xtx     = t(private$p_design[train_idx, ]) %*% private$p_design[train_idx, ]
-      private$p_penmat  = compboostSplines::penaltyMat(ncol(private$p_design), private$p_derivs)
+      private$p_penmat  = cpsp::penaltyMat(ncol(private$p_design), private$p_derivs)
 
       if (is.null(pen))
-        private$p_penalty = compboostSplines::demmlerReinsch(as.matrix(private$p_xtx), private$p_penmat, private$p_df)
+        private$p_penalty = cpsp::demmlerReinsch(as.matrix(private$p_xtx), private$p_penmat, private$p_df)
       else
         private$p_penalty = pen
 
@@ -104,8 +104,8 @@ BlSpline = R6Class("BlSpline",
       private$p_df      = df
 
       private$p_xtx     = xtx
-      private$p_penmat  = compboostSplines::penaltyMat(ncol(xtx), private$p_derivs)
-      private$p_penalty = compboostSplines::demmlerReinsch(private$p_xtx, private$p_penmat, private$p_df)
+      private$p_penmat  = cpsp::penaltyMat(ncol(xtx), private$p_derivs)
+      private$p_penalty = cpsp::demmlerReinsch(private$p_xtx, private$p_penmat, private$p_df)
       private$p_xtx_inv = solve(private$p_xtx + private$p_penalty * private$p_penmat)
     },
 
@@ -386,7 +386,7 @@ BlOneHot = R6Class("BlOneHot",
       private$p_penmat  = diag(ncol(private$p_design))
 
       if (is.null(pen))
-        private$p_penalty = compboostSplines::demmlerReinsch(as.matrix(private$p_xtx), private$p_penmat, private$p_df)
+        private$p_penalty = cpsp::demmlerReinsch(as.matrix(private$p_xtx), private$p_penmat, private$p_df)
       else
         private$p_penalty = pen
 
@@ -411,7 +411,7 @@ BlOneHot = R6Class("BlOneHot",
 
       private$p_xtx     = xtx
       private$p_penmat  = diag(ncol(xtx))
-      private$p_penalty = compboostSplines::demmlerReinsch(private$p_xtx, private$p_penmat, private$p_df)
+      private$p_penalty = cpsp::demmlerReinsch(private$p_xtx, private$p_penmat, private$p_df)
       private$p_xtx_inv = diag(1 / diag(private$p_xtx + private$p_penalty * private$p_penmat))
     },
 
