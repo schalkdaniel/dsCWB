@@ -35,7 +35,7 @@ aggregateXtX = function(xtxs) {
   return(ll_out)
 }
 
-getMinimalSSE = function(ll_sses) {
+getMinimalSSE = function(ll_sses, force_shared = FALSE) {
   checkmate::assertList(ll_sses)
   nuisance = lapply(ll_sses, function(lls) {
     checkmate::assertList(lls)
@@ -79,7 +79,7 @@ getMinimalSSE = function(ll_sses) {
   # It may happen due to the transmission of the sse values that there are small
   # differences even though there aren't. Hence, a check with the diff is done
   # instead of checking `combined_min[[1]] == combined_min[[2]]`.
-  if (abs(diff(combined_min)) < 1e-9) {
+  if ((abs(diff(combined_min)) < 1e-9) || force_shared) {
     min_idx = 1
     names(min_idx) = names(combined_min)[1]
   }
@@ -251,7 +251,7 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   checkmate::assertNumeric(x = eps_for_break, lower = 0, upper = 1, len = 1L, any.missing = FALSE, null.ok = TRUE)
   checkmate::assertCharacter(x = positive, len = 1L, any.missing = FALSE, null.ok = TRUE)
   checkmate::assertCount(x = seed, null.ok = TRUE)
-  checkmate::assertCharacter(x = force_shared_iters, len = 1L, any.missing = FALSE, null.ok = TRUE)
+  checkmate::assertCount(x = force_shared_iters, null.ok = TRUE)
 
   symchar = transChar(symbol)
   tchar = transChar(target)
@@ -359,7 +359,13 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
     cl_sses = paste0("getClientSSE(", mchar, ", \"", encodeObject(ll_shared_effects_param), "\")")
     ll_sses = datashield.aggregate(connections, cl_sses)
 
-    min_sse = getMinimalSSE(ll_sses)
+    if (k <= force_shared_iters)
+      force_shared = TRUE
+    else
+      force_shared = FALSE
+
+    min_sse = getMinimalSSE(ll_sses, force_shared)
+
 
     # Get risk:
     ll_rt = datashield.aggregate(connections, eval(parse(text = paste0("quote(getRisk(", mchar, ", \"train\"))"))))
@@ -377,10 +383,8 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
 
     blname = transChar(names(min_sse))
 
-    sel_effect_type = attr(min_sse, "effect_type")
-    if (k <= force_shared_iters) sel_effect_type = "shared"
 
-    if (sel_effect_type == "site") {
+    if (attr(min_sse, "effect_type") == "site") {
       # update client
       cl_update = paste0("quote(updateClientBaselearner(", mchar, ", ", blname, "))")
       datashield.assign(connections, model_symbol, eval(parse(text = cl_update)))

@@ -1,6 +1,5 @@
 source(here::here("usecase/upload-data.R"))
 
-
 library(DSI)
 library(DSOpal)
 library(dsBaseClient)
@@ -55,7 +54,7 @@ devtools::load_all()
 
 cwb = dsCWB(connections, symbol, target, feature_names, mstop = 1000L,
   val_fraction = 0.05, patience = 3L, seed = 31415L, positive = "yes",
-  df = 3)
+  df = 5, force_shared_iters = 100L)
 
 l = cwb$getLog()
 table(l$bl)
@@ -78,7 +77,23 @@ ggplot(vi, aes(x = reorder(feature, vip), y = vip)) +
   geom_bar(stat = "identity") +
   coord_flip()
 
+sharedFEDataNum = function(cwb, feature) {
+  blns = names(cwb$coef$shared)
+  bln = blns[grepl(feature, blns)]
+  coefs = cwb$coef$shared[[bln]]
 
+  bl = cwb$bls[[bln]]
+
+  lms = bl$getKnotRange()
+  ndat = data.frame(x = seq(lms[1], lms[2], len = 100L))
+  colnames(ndat) = feature
+
+  df_fe = data.frame(val = ndat[[feature]], pred = bl$predictNewdata(ndat, par = coefs))
+  colnames(df_fe)[1] = feature
+
+  return(df_fe)
+
+}
 siteFEDataNum = function(cwb, feature) {
   ss = names(cwb$coef$site)
   blns = names(cwb$coef$site[[1]])
@@ -123,6 +138,7 @@ siteFEDataCat = function(cwb, feature) {
   return(df_fe)
 }
 
+ggplot(sharedFEDataNum(cwb, "oldpeak"), aes(x = oldpeak, y = pred)) + geom_line()
 
 ggplot(siteFEDataNum(cwb, "oldpeak"), aes(x = oldpeak, y = pred, color = server)) + geom_line()
 ggplot(siteFEDataNum(cwb, "age"), aes(x = age, y = pred, color = server)) + geom_line()
