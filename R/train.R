@@ -175,6 +175,8 @@ calculateDF = function(xtxs, hm, df) {
 #'   Seed for generating validation data (only applies when val_fraction is set).
 #' @param trace (`logical(1L)`)\cr
 #'   Indicator if the fitting trace should be printed or not.
+#' @param force_shared_iters (`integer(1L)`)\cr
+#'   Number of iterations in the beginning that are just training the shared effect.
 #' @return Client model of R6 class ClientModel.
 #' @importFrom DSI datashield.aggregate datashield.assign
 #' @examples
@@ -230,7 +232,8 @@ calculateDF = function(xtxs, hm, df) {
 #' @export
 dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L,
   learning_rate = 0.1, df = 5, nknots = 20L, ord = 3L, derivs = 2L, val_fraction = NULL,
-  patience = NULL, eps_for_break = 0, positive = NULL, seed = NULL, trace = TRUE) {
+  patience = NULL, eps_for_break = 0, positive = NULL, seed = NULL, trace = TRUE,
+  force_shared_iters = NULL) {
 
   checkConnection(connections)
 
@@ -248,6 +251,7 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   checkmate::assertNumeric(x = eps_for_break, lower = 0, upper = 1, len = 1L, any.missing = FALSE, null.ok = TRUE)
   checkmate::assertCharacter(x = positive, len = 1L, any.missing = FALSE, null.ok = TRUE)
   checkmate::assertCount(x = seed, null.ok = TRUE)
+  checkmate::assertCharacter(x = force_shared_iters, len = 1L, any.missing = FALSE, null.ok = TRUE)
 
   symchar = transChar(symbol)
   tchar = transChar(target)
@@ -332,6 +336,21 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
     risk_val_old = Inf
   }
 
+  # Get offset risk:
+  # Get risk:
+  ll_rt = datashield.aggregate(connections, eval(parse(text = paste0("quote(getRisk(", mchar, ", \"train\"))"))))
+  risk_train_offset = Reduce("+", ll_rt) / sum(unlist(ntrain))
+
+  risk_val_offset = NA
+  if (! is.null(val_fraction)) {
+    nval = vapply(winit, function(w) w$nval, integer(1L))
+    ll_rv = datashield.aggregate(connections, eval(parse(text = paste0("quote(getRisk(", mchar, ", \"val\"))"))))
+    risk_val_offset = Reduce("+", ll_rv) / sum(unlist(nval))
+  }
+
+  hm$log("_intercept", "shared", NA, risk_train_offset, risk_val_offset)
+  if (is.null(force_shared_iters)) force_shared_iters = 0
+
   while (train_iter) {
     # Get Xty and SSEs from fitted site-specific effects from the ds servers:
     ll_xty = datashield.aggregate(connections, paste0("getClientXty(", mchar, ")"))
@@ -357,7 +376,11 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
     hm$log(names(min_sse), unname(attr(min_sse, "effect_type")), unname(min_sse), risk_train, risk_val)
 
     blname = transChar(names(min_sse))
-    if (attr(min_sse, "effect_type") == "site") {
+
+    sel_effect_type = attr(min_sse, "effect_type")
+    if (k <= force_shared_iters) sel_effect_type = "shared"
+
+    if (sel_effect_type == "site") {
       # update client
       cl_update = paste0("quote(updateClientBaselearner(", mchar, ", ", blname, "))")
       datashield.assign(connections, model_symbol, eval(parse(text = cl_update)))

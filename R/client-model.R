@@ -268,16 +268,18 @@ ClientModel = R6Class("ClientModel",
           e = try({
             private$addBlNumeric(ff, paste0(ff, "-spline"), ll_init[[ff]]$min, ll_init[[ff]]$max)
           }, silent = TRUE)
+          control = "numeric"
         }
         if (is.character(x) || is.factor(x)) {
           e = try({
             private$addBlCategorical(ff, paste0(ff, "-onehot"), ll_init[[ff]]$table)
           }, silent = TRUE)
+          control = "categorical"
         }
         if (inherits(e, "try-error")) {
-          stop("Error in base learner creation of feature ", ff, ":\n", attr(e, "condition")$message)
+          stop("Error in base learner creation of the ", control, " feature ", ff,
+            ": \n ", attr(e, "condition")$message)
         }
-
       }
     },
 

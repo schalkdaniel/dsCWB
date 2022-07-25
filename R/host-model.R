@@ -193,16 +193,21 @@ HostModel = R6Class("HostModel",
     log = function(blname, effect_type, sse, risk_train = NA, risk_val = NA) {
       checkmate::assertCharacter(blname, len = 1L, any.missing = FALSE)
       checkmate::assertChoice(effect_type, c("shared", "site"))
-      checkmate::assertNumeric(sse, len = 1L, any.missing = FALSE)
+      checkmate::assertNumeric(sse, len = 1L)
       checkmate::assertNumeric(risk_train, len = 1L)
       checkmate::assertNumeric(risk_val, len = 1L)
 
       tchar = Sys.time()
       if (is.null(private$p_log)) {
-        private$p_log = data.frame(time = tchar, iteration = 1, bl = blname, effect_type = effect_type, sse = sse,
+        if (blname == "_intercept")
+          istart = 0
+        else
+          istart = 1
+
+        private$p_log = data.frame(time = tchar, iteration = istart, bl = blname, effect_type = effect_type, sse = sse,
           risk_train = risk_train, risk_val = risk_val)
       } else {
-        lnew = data.frame(time = tchar, iteration = nrow(private$p_log) + 1, bl = blname,
+        lnew = data.frame(time = tchar, iteration = max(private$p_log$iteration) + 1, bl = blname,
           effect_type = effect_type, sse = sse, risk_train = risk_train, risk_val = risk_val)
         private$p_log = rbind(private$p_log, lnew)
       }

@@ -4,8 +4,8 @@
 
 ## Download files from https://archive.ics.uci.edu/ml/datasets/heart+disease
 
-sources = c("cleveland", "hungarian", "switzerland", "va")
-dnames = paste0("data/processed.", sources, ".data")
+#sources = c("cleveland", "hungarian", "switzerland", "va")
+#dnames = paste0("data/processed.", sources, ".data")
 
 #  1. #3 (age) years
 #  2. #4 (sex) 1 male, 0 female
@@ -55,7 +55,7 @@ readData = function(file, add_source = FALSE, add_id = FALSE, rm_pcols = TRUE) {
   for (fv in fvals) {
     tmp[[fv]] = as.factor(as.integer(as.character(tmp[[fv]])))
   }
-  if (add_source) a$source = strsplit(file, "[.]")[[1]][2]
+  if (add_source) tmp$source = strsplit(file, "[.]")[[1]][2]
   if (add_id) tmp$id = seq_len(nrow(tmp))
 
   tmp$heart_disease = ifelse(tmp$num == "1", "yes", "no")
