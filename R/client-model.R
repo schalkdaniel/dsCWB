@@ -433,7 +433,7 @@ ClientModel = R6Class("ClientModel",
     p_prediction = NULL,
     p_offset = NULL,
     p_task = NULL,
-    p_positve = NULL,
+    p_positive = NULL,
     p_loss = NULL
   )
 )

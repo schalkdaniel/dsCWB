@@ -34,8 +34,11 @@ dnames = paste0("data/processed.", sources, ".data")
 #               -- Value 0: < 50% diameter narrowing
 #               -- Value 1: > 50% diameter narrowing
 
-readData = function(file, add_source = FALSE) {
-  tmp = read.csv(file, header = FALSE)
+readData = function(file, add_source = FALSE, add_id = FALSE, rm_pcols = TRUE) {
+  if (grepl("reprocessed", file))
+    tmp = read.csv(file, sep = " ", header = FALSE)
+  else
+    tmp = read.csv(file, header = FALSE)
 
   cnames = c("age", "sex", "cp", "trestbps", "chol", "fbs", "restecg", "thalach",
     "exang", "oldpeak", "slope", "ca", "thal", "num")
@@ -43,11 +46,27 @@ readData = function(file, add_source = FALSE) {
   fvals = c("sex", "cp", "fbs", "restecg", "exang", "slope", "ca", "thal", "num")
   colnames(tmp) = cnames
 
+  for (fv in cnames) {
+    var = tmp[[fv]]
+    idx_msg = (var == "?") | (var == "-9") | (var == "-9.0")
+    var[idx_msg] = NA
+    tmp[[fv]] = var
+  }
   for (fv in fvals) {
-    tmp[[fv]] = as.factor(tmp[[fv]])
+    tmp[[fv]] = as.factor(as.integer(as.character(tmp[[fv]])))
   }
   if (add_source) a$source = strsplit(file, "[.]")[[1]][2]
-  tmp$id = seq_len(nrow(tmp))
+  if (add_id) tmp$id = seq_len(nrow(tmp))
+
+  tmp$heart_disease = ifelse(tmp$num == "1", "yes", "no")
+
+  if (rm_pcols) {
+    tmp$num = NULL
+    tmp$thal = NULL # 486 missings in total
+    tmp$ca = NULL # 611 missings in total
+    tmp$slope = NULL # 309 missings in total
+    tmp$fbs = NULL # Too many missings for switzerland
+  }
   return(tmp)
 }
 
@@ -66,10 +85,23 @@ opalr::opal.project_create(opal, project = "SLDS-TEST", database = "mongodb")
 
 datasets = list.files(here::here("usecase/data"), full.names = TRUE)
 
+## Short inspection of datasets -------------------- ##
+
+# ll_dfs = lapply(datasets, readData, rm_pcols = TRUE)
+# tmp = do.call(rbind, ll_dfs)
+#
+# table(complete.cases(tmp))
+# sapply(tmp, function(x) sum(is.na(x)))
+#
+# lapply(ll_dfs, function(tmp) table(complete.cases(tmp)))
+# lapply(ll_dfs, function(tmp) sapply(tmp, function(x) sum(is.na(x))))
+
+## ------------------------------------------------- ##
+
 for (d in datasets) {
 
   opalr::opal.table_save(opal,
-    tibble = tibble::as_tibble(readData(d)),
+    tibble = tibble::as_tibble(na.omit(readData(d, add_id = TRUE))),
     project = "SLDS-TEST",
     table = strsplit(d, "[.]")[[1]][2],
     overwrite = TRUE,

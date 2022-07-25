@@ -33,11 +33,25 @@ datashield.symbols(connections)
 
 
 symbol = "D"
-target = "LAB_TSC"
+target = "heart_disease"
 feature_names = setdiff(dsBaseClient::ds.names("D", connections)[[1]], target)
 
+mstop = 100L
+learning_rate = 0.1
+val_fraction = 0.1
+patience = 5L
+seed = 31415L
+df = 5
+nknots = 20L
+ord = 3L
+derivs = 2L
+
+eps_for_break = NULL
+positive = "yes"
+
+
 cwb = dsCWB(connections, symbol, target, feature_names, mstop = 100L,
-  val_fraction = 0.1, patience = 5L, seed = 31415L)
+  val_fraction = 0.1, patience = 5L, seed = 31415L, positive = "yes")
 
 l = cwb$getLog()
 
