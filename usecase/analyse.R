@@ -5,7 +5,8 @@ library(DSI)
 library(DSOpal)
 library(dsBaseClient)
 
-library(dsCWB)
+#library(dsCWB)
+devtools::load_all()
 
 builder = newDSLoginBuilder()
 

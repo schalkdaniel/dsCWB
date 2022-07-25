@@ -265,11 +265,19 @@ ClientModel = R6Class("ClientModel",
       for (ff in private$p_feature_names) {
         x = private$getFeatureFromData(ff)
         if (is.numeric(x)) {
-          private$addBlNumeric(ff, paste0(ff, "-spline"), ll_init[[ff]]$min, ll_init[[ff]]$max)
+          e = try({
+            private$addBlNumeric(ff, paste0(ff, "-spline"), ll_init[[ff]]$min, ll_init[[ff]]$max)
+          }, silent = TRUE)
         }
         if (is.character(x) || is.factor(x)) {
-          private$addBlCategorical(ff, paste0(ff, "-onehot"), ll_init[[ff]]$table)
+          e = try({
+            private$addBlCategorical(ff, paste0(ff, "-onehot"), ll_init[[ff]]$table)
+          }, silent = TRUE)
         }
+        if (inherits(e, "try-error")) {
+          stop("Error in base learner creation of feature ", ff, ":\n", attr(e, "condition")$message)
+        }
+
       }
     },
 

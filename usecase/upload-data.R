@@ -36,9 +36,9 @@ dnames = paste0("data/processed.", sources, ".data")
 
 readData = function(file, add_source = FALSE, add_id = FALSE, rm_pcols = TRUE) {
   if (grepl("reprocessed", file))
-    tmp = read.csv(file, sep = " ", header = FALSE)
+    tmp = read.csv(file, sep = " ", header = FALSE, na.strings = c("?", "-9", "-9.0"))
   else
-    tmp = read.csv(file, header = FALSE)
+    tmp = read.csv(file, header = FALSE, na.strings = c("?", "-9", "-9.0"))
 
   cnames = c("age", "sex", "cp", "trestbps", "chol", "fbs", "restecg", "thalach",
     "exang", "oldpeak", "slope", "ca", "thal", "num")
@@ -46,12 +46,12 @@ readData = function(file, add_source = FALSE, add_id = FALSE, rm_pcols = TRUE) {
   fvals = c("sex", "cp", "fbs", "restecg", "exang", "slope", "ca", "thal", "num")
   colnames(tmp) = cnames
 
-  for (fv in cnames) {
-    var = tmp[[fv]]
-    idx_msg = (var == "?") | (var == "-9") | (var == "-9.0")
-    var[idx_msg] = NA
-    tmp[[fv]] = var
-  }
+  #for (fv in cnames) {
+    #var = tmp[[fv]]
+    #idx_msg = (var == "?") | (var == "-9") | (var == "-9.0")
+    #var[idx_msg] = NA
+    #tmp[[fv]] = var
+  #}
   for (fv in fvals) {
     tmp[[fv]] = as.factor(as.integer(as.character(tmp[[fv]])))
   }
@@ -116,8 +116,9 @@ ch1 = opalr::dsadmin.install_github_package(opal = opal, pkg = "dsCWB", username
 
 if (ch1) {
   opalr::dsadmin.publish_package(opal = opal, pkg = "dsCWB")
+  message("[", Sys.time(), "] Successfully installed dsCWB")
 } else {
-  cat("Could not install package! :-(")
+  message("[", Sys.time(), "] Could not install package! :-(")
 }
 
 opalr::opal.logout(opal)
