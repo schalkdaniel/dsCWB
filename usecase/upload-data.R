@@ -4,9 +4,6 @@
 
 ## Download files from https://archive.ics.uci.edu/ml/datasets/heart+disease
 
-#sources = c("cleveland", "hungarian", "switzerland", "va")
-#dnames = paste0("data/processed.", sources, ".data")
-
 #  1. #3 (age) years
 #  2. #4 (sex) 1 male, 0 female
 #  3. #9 (cp) chest pain type
@@ -34,7 +31,7 @@
 #               -- Value 0: < 50% diameter narrowing
 #               -- Value 1: > 50% diameter narrowing
 
-readData = function(file, add_source = FALSE, add_id = FALSE, rm_pcols = TRUE) {
+readData = function(file, add_source = FALSE, add_id = FALSE, rm_pcols = TRUE, add_sim_col = FALSE) {
   if (grepl("reprocessed", file))
     tmp = read.csv(file, sep = " ", header = FALSE, na.strings = c("?", "-9", "-9.0"))
   else
@@ -67,6 +64,16 @@ readData = function(file, add_source = FALSE, add_id = FALSE, rm_pcols = TRUE) {
     tmp$slope = NULL # 309 missings in total
     tmp$fbs = NULL # Too many missings for switzerland
     tmp$chol = NULL # Only zeros for switzerland ... :-(
+  }
+
+  if (add_sim_col) {
+    x = sort(runif(nrow(tmp), 0, 100))
+    xn = rep(0, nrow(tmp))
+    idx_yes = tmp$heart_disease == "yes"
+    idx_yes = ifelse(rbinom(nrow(tmp), 1, 0.1), ! idx_yes, idx_yes)
+    xn[idx_yes] = tail(x, sum(idx_yes))
+    xn[! idx_yes] = head(x, sum(! idx_yes))
+    tmp$simcol = xn
   }
   return(tmp)
 }
@@ -101,7 +108,7 @@ datasets = list.files(here::here("usecase/data"), full.names = TRUE)
 
 for (d in datasets) {
   opalr::opal.table_save(opal,
-    tibble = tibble::as_tibble(na.omit(readData(d, add_id = TRUE))),
+    tibble = tibble::as_tibble(na.omit(readData(d, add_id = TRUE, add_sim_col = TRUE))),
     project = "SLDS-TEST",
     table = strsplit(d, "[.]")[[1]][2],
     overwrite = TRUE,

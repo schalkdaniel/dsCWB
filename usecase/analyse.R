@@ -52,11 +52,14 @@ feature_names = setdiff(dsBaseClient::ds.names("D", connections)[[1]], target)
 
 devtools::load_all()
 
-cwb = dsCWB(connections, symbol, target, feature_names, mstop = 1000L,
+cwb = dsCWB(connections, symbol, target, feature_names, mstop = 100L,
   val_fraction = 0.05, patience = 3L, seed = 31415L, positive = "yes",
-  df = 5, force_shared_iters = 100L)
+  df = 5)
+
+chps = datashield.aggregate(connections, "getBlHyperpars('cm')")
 
 l = cwb$getLog()
+
 table(l$bl)
 table(l$effect_type)
 
@@ -77,72 +80,11 @@ ggplot(vi, aes(x = reorder(feature, vip), y = vip)) +
   geom_bar(stat = "identity") +
   coord_flip()
 
-sharedFEDataNum = function(cwb, feature) {
-  blns = names(cwb$coef$shared)
-  bln = blns[grepl(feature, blns)]
-  coefs = cwb$coef$shared[[bln]]
+#ggplot(sharedFEDataNum(cwb, "oldpeak"), aes(x = oldpeak, y = pred)) + geom_line()
 
-  bl = cwb$bls[[bln]]
-
-  lms = bl$getKnotRange()
-  ndat = data.frame(x = seq(lms[1], lms[2], len = 100L))
-  colnames(ndat) = feature
-
-  df_fe = data.frame(val = ndat[[feature]], pred = bl$predictNewdata(ndat, par = coefs))
-  colnames(df_fe)[1] = feature
-
-  return(df_fe)
-
-}
-siteFEDataNum = function(cwb, feature) {
-  ss = names(cwb$coef$site)
-  blns = names(cwb$coef$site[[1]])
-  bln = blns[grepl(feature, blns)]
-  coefs = lapply(ss, function(s) cwb$coef$site[[s]][[bln]])
-  names(coefs) = ss
-
-  bl = cwb$bls[[bln]]
-
-  lms = bl$getKnotRange()
-  ndat = data.frame(x = seq(lms[1], lms[2], len = 100L))
-  colnames(ndat) = feature
-
-  df_fe = do.call(rbind, lapply(ss, function(s) {
-    pred = bl$predictNewdata(ndat, par = coefs[[s]])
-    out = data.frame(val = ndat[[feature]], pred = pred, server = s)
-    return(out)
-  }))
-  colnames(df_fe)[1] = feature
-
-  return(df_fe)
-}
-siteFEDataCat = function(cwb, feature) {
-  ss = names(cwb$coef$site)
-  blns = names(cwb$coef$site[[1]])
-  bln = blns[grepl(feature, blns)]
-  bl = cwb$bls[[bln]]
-  coefs = lapply(ss, function(s) {
-    cout = cwb$coef$site[[s]][[bln]]
-    names(cout) = names(bl$getDictionary())
-    cout
-  })
-  names(coefs) = ss
-
-  df_fe = do.call(rbind, lapply(ss, function(s) {
-    pred = coefs[[s]]
-    out = data.frame(val = names(pred), pred = pred, server = s)
-    return(out)
-  }))
-  colnames(df_fe)[1] = feature
-
-  return(df_fe)
-}
-
-ggplot(sharedFEDataNum(cwb, "oldpeak"), aes(x = oldpeak, y = pred)) + geom_line()
-
+ggplot(siteFEDataNum(cwb, "simcol"), aes(x = simcol, y = pred, color = server)) + geom_line()
 ggplot(siteFEDataNum(cwb, "oldpeak"), aes(x = oldpeak, y = pred, color = server)) + geom_line()
 ggplot(siteFEDataNum(cwb, "age"), aes(x = age, y = pred, color = server)) + geom_line()
-ggplot(siteFEDataNum(cwb, "chol"), aes(x = chol, y = pred, color = server)) + geom_line()
 ggplot(siteFEDataNum(cwb, "trestbps"), aes(x = trestbps, y = pred, color = server)) + geom_line()
 
 ggplot(siteFEDataCat(cwb, "cp"), aes(x = "", y = pred, color = server, shape = server)) +

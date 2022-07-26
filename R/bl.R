@@ -260,6 +260,7 @@ BlSpline = R6Class("BlSpline",
     updatePenalty = function(pen) {
       checkmate::assertNumeric(pen, len = 1L, lower = 0, any.missing = FALSE)
       private$p_penalty = pen
+      private$p_xtx_inv = solve(private$p_xtx + private$p_penalty * private$p_penmat)
     },
 
     #' @description
@@ -567,6 +568,7 @@ BlOneHot = R6Class("BlOneHot",
     updatePenalty = function(pen) {
       checkmate::assertNumeric(pen, len = 1L, lower = 0, any.missing = FALSE)
       private$p_penalty = pen
+      private$p_xtx_inv = diag(1 / diag(private$p_xtx + private$p_penalty * private$p_penmat))
     },
 
     #' @description

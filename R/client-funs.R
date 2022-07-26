@@ -93,7 +93,7 @@ updateClientPenalty = function(model_symbol, ll_pen_binary) {
   return(cm)
 }
 
-#' @title Update the penalties of the client models.
+#' @title Get the hyperaprameter of the client base learners.
 #' @param model_symbol (`character(1L)`)\cr
 #'   The name of the model at the server.
 #' @export

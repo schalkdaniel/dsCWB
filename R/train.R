@@ -225,7 +225,7 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   checkmate::assertCharacter(x = feature_names, any.missing = FALSE)
   checkmate::assertCount(x = mstop, positive = TRUE)
   checkmate::assertNumeric(x = learning_rate, len = 1L, any.missing = FALSE)
-  checkmate::assertNumeric(x = df, len = 1L, any.missing = FALSE)
+  checkmate::assertNumeric(x = df, any.missing = FALSE, lower = 0)
   checkmate::assertIntegerish(x = nknots, len = 1L, any.missing = FALSE)
   checkmate::assertIntegerish(x = ord, len = 1L, any.missing = FALSE)
   checkmate::assertIntegerish(x = derivs, len = 1L, any.missing = FALSE)
@@ -235,6 +235,8 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   checkmate::assertCharacter(x = positive, len = 1L, any.missing = FALSE, null.ok = TRUE)
   checkmate::assertCount(x = seed, null.ok = TRUE)
   checkmate::assertCount(x = force_shared_iters, null.ok = TRUE)
+
+  if (length(df) > 2) stop("df must be of length <= 2")
 
   symchar = transChar(symbol)
   tchar = transChar(target)
@@ -253,8 +255,13 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
 
   tt = tt[[1]]
 
+  if (length(df) == 2)
+    dfs = df[1]
+  else
+    dfs = df
+
   hm = HostModel$new(symbol = symbol, target = target, target_type = tt, feature_names = feature_names,
-    learning_rate = learning_rate, df = df, nknots = nknots, ord = ord, derivs = derivs,
+    learning_rate = learning_rate, df = dfs, nknots = nknots, ord = ord, derivs = derivs,
     positive = positive)
 
   ## Create client models:
@@ -262,7 +269,7 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
 
   call_init_client_model = NULL
   eval(parse(text = paste0("call_init_client_model = quote(createClientModel(",
-    symchar, ",", tchar, ", c(", fn, ") ,", learning_rate, ", ", df, ", ", nknots, ", ", ord, ", ",
+    symchar, ",", tchar, ", c(", fn, ") ,", learning_rate, ", ", dfs, ", ", nknots, ", ", ord, ", ",
     derivs, ", ", oobchar, ", ", pchar, ", ", schar,
   "))")))
   datashield.assign(connections, model_symbol, call_init_client_model)
@@ -302,7 +309,12 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   hm$addBaselearners(cli, ll_xtx)
 
   cl_pen_update = NULL
-  penalty_adjusted = calculateDF(xtxs, hm, df)
+  if (length(df) == 2)
+    dfa = df[2]
+  else
+    dfa = df
+
+  penalty_adjusted = calculateDF(xtxs, hm, dfa)
   eval(parse(text = paste0("cl_pen_update = quote(updateClientPenalty(", mchar, ", ",
     transChar(encodeObject(penalty_adjusted)), "))")))
 
