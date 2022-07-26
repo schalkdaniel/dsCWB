@@ -20,7 +20,8 @@ dsCWB(
   eps_for_break = 0,
   positive = NULL,
   seed = NULL,
-  trace = TRUE
+  trace = TRUE,
+  force_shared_iters = NULL
 )
 }
 \arguments{
@@ -71,6 +72,9 @@ Seed for generating validation data (only applies when val_fraction is set).}
 
 \item{trace}{(`logical(1L)`)\cr
 Indicator if the fitting trace should be printed or not.}
+
+\item{force_shared_iters}{(`integer(1L)`)\cr
+Number of iterations in the beginning that are just training the shared effect.}
 }
 \value{
 Client model of R6 class ClientModel.
@@ -80,19 +84,13 @@ Train a distributed CWB model.
 }
 \examples{
 \dontrun{
-# Install package on DataSHIELD test server:
+library(DSI)
+library(DSOpal)
+
+# Establish connection to the DataSHIELD servers:
 surl     = "https://opal-demo.obiba.org/"
 username = "administrator"
 password = "password"
-
-opal = opalr::opal.login(username = username, password = password, url = surl)
-opalr::dsadmin.install_github_package(opal = opal, pkg = "dsCWB", username = "schalkdaniel", ref = "main")
-opalr::dsadmin.publish_package(opal = opal, pkg = "dsCWB")
-opalr::opal.logout(opal, save = FALSE)
-
-# Establish connection to the DataSHIELD servers:
-library(DSI)
-library(DSOpal)
 
 builder = newDSLoginBuilder()
 
@@ -111,20 +109,9 @@ builder$append(
 connections = datashield.login(logins = builder$build(), assign = TRUE)
 datashield.assign(connections, "dat", quote(iris))
 
-symbol = "dat"
-target = "Sepal.Length"
-feature_names = setdiff(names(iris), target)
-mstop = 100L
-learning_rate = 0.1
-df = 5
-nknots = 20L
-ord = 3L
-derivs = 2L
-val_fraction = NULL
-patience = NULL
-eps_for_break = NULL
-positive = NULL
-seed = NULL
+feature_names = setdiff(names(iris), "Sepal.Length")
+cwb = dsCWB(connections, "dat", "Sepal.Length", feature_names)
+cwb$getLog()
 
 datashield.logout(connections)
 }

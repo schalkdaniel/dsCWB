@@ -66,6 +66,7 @@ readData = function(file, add_source = FALSE, add_id = FALSE, rm_pcols = TRUE) {
     tmp$ca = NULL # 611 missings in total
     tmp$slope = NULL # 309 missings in total
     tmp$fbs = NULL # Too many missings for switzerland
+    tmp$chol = NULL # Only zeros for switzerland ... :-(
   }
   return(tmp)
 }
@@ -99,7 +100,6 @@ datasets = list.files(here::here("usecase/data"), full.names = TRUE)
 ## ------------------------------------------------- ##
 
 for (d in datasets) {
-
   opalr::opal.table_save(opal,
     tibble = tibble::as_tibble(na.omit(readData(d, add_id = TRUE))),
     project = "SLDS-TEST",

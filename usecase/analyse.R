@@ -14,7 +14,7 @@ username = "administrator"
 password = "password"
 
 sources = c("cleveland", "hungarian", "switzerland", "va")
-for (i in seq_along(sources)[-3]) {
+for (i in seq_along(sources)) {
   builder$append(
     server   = paste0("ds", i),
     url      = surl,

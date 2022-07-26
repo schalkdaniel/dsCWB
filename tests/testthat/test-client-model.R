@@ -89,7 +89,12 @@ test_that("client model generation works on DataSHIELD server", {
 
   if (inherits(opal, "opal")) {
     # Check if package can be installed:
-    expect_true(opalr::dsadmin.install_github_package(opal = opal, pkg = pkg, username = "schalkdaniel", ref = "main"))
+    pcheck = opalr::dsadmin.install_github_package(opal = opal, pkg = pkg, username = "schalkdaniel", ref = "main")
+  } else {
+    pcheck = FALSE
+  }
+
+  if (pcheck) {
     expect_true(opalr::dsadmin.publish_package(opal = opal, pkg = pkg))
 
     opalr::opal.logout(opal, save = FALSE)
