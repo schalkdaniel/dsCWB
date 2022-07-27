@@ -34,6 +34,30 @@ sharedFEDataNum = function(cwb, feature, npoints = 100L) {
 
 }
 
+#' @title Get data for a categorical shared effect
+#' @param cwb ()\cr
+#' @param feature (`character(1L)`)\cr
+#'   Name of the feature.
+#' @return `data.frame()` with feature values and the prediction.
+#' @export
+sharedFEDataCat = function(cwb, feature) {
+  tcheck(cwb)
+  checkmate::assertChoice(feature, choices = cwb$getFeatureNames())
+
+  blns = names(cwb$coef$shared)
+  bln = blns[grepl(feature, blns)]
+  bl = cwb$bls[[bln]]
+  coefs = cwb$coef$shared[[bln]]
+
+  df_fe = data.frame(
+    val = names(bl$getDictionary()),
+    pred = coefs)
+
+  colnames(df_fe)[1] = feature
+
+  return(df_fe)
+}
+
 #' @title Get data for a numerical site effect
 #' @param cwb ()\cr
 #' @param feature (`character(1L)`)\cr

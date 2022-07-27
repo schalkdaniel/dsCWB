@@ -108,7 +108,7 @@ datasets = list.files(here::here("usecase/data"), full.names = TRUE)
 
 for (d in datasets) {
   opalr::opal.table_save(opal,
-    tibble = tibble::as_tibble(na.omit(readData(d, add_id = TRUE, add_sim_col = TRUE))),
+    tibble = tibble::as_tibble(na.omit(readData(d, add_id = TRUE))),
     project = "SLDS-TEST",
     table = strsplit(d, "[.]")[[1]][2],
     overwrite = TRUE,

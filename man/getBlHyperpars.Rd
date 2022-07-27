@@ -2,7 +2,7 @@
 % Please edit documentation in R/client-funs.R
 \name{getBlHyperpars}
 \alias{getBlHyperpars}
-\title{Update the penalties of the client models.}
+\title{Get the hyperaprameter of the client base learners.}
 \usage{
 getBlHyperpars(model_symbol)
 }
@@ -11,5 +11,5 @@ getBlHyperpars(model_symbol)
 The name of the model at the server.}
 }
 \description{
-Update the penalties of the client models.
+Get the hyperaprameter of the client base learners.
 }

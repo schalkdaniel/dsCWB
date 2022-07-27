@@ -16,7 +16,7 @@ password = "password"
 sources = c("cleveland", "hungarian", "switzerland", "va")
 for (i in seq_along(sources)) {
   builder$append(
-    server   = paste0("ds", i),
+    server   = sources[i],
     url      = surl,
     user     = username,
     password = password,
@@ -36,34 +36,23 @@ symbol = "D"
 target = "heart_disease"
 feature_names = setdiff(dsBaseClient::ds.names("D", connections)[[1]], target)
 
-#mstop = 100L
-#learning_rate = 0.1
-#val_fraction = 0.1
-#patience = 5L
-#seed = 31415L
-#df = 5
-#nknots = 20L
-#ord = 3L
-#derivs = 2L
+cwb = dsCWB(connections, symbol, target, feature_names, mstop = 2000L,
+  val_fraction = 0.2, patience = 3L, seed = 31415L, positive = "yes",
+  df = 5, learning_rate = 0.01, derivs = 3L)
 
-#eps_for_break = NULL
-#positive = "yes"
-
-
-devtools::load_all()
-
-cwb = dsCWB(connections, symbol, target, feature_names, mstop = 100L,
-  val_fraction = 0.05, patience = 3L, seed = 31415L, positive = "yes",
-  df = 5)
-
-chps = datashield.aggregate(connections, "getBlHyperpars('cm')")
+#save(cwb, file = "usecase/model-lr01.Rda")
+#load("usecase/model-lr01.Rda")
 
 l = cwb$getLog()
 
+library(ggplot2)
+
+plotBaselearnerTraces(cwb, n_legend = 7L, add_effect_type = FALSE)
+plotBaselearnerTraces(cwb, n_legend = 7L, add_effect_type = TRUE)
+
 table(l$bl)
 table(l$effect_type)
-
-library(ggplot2)
+table(paste0(l$bl, "-", l$effect_type))
 
 ggplot(l, aes(x = iteration)) +
   geom_line(aes(y = risk_train, color = "Train risk")) +
@@ -80,18 +69,22 @@ ggplot(vi, aes(x = reorder(feature, vip), y = vip)) +
   geom_bar(stat = "identity") +
   coord_flip()
 
-#ggplot(sharedFEDataNum(cwb, "oldpeak"), aes(x = oldpeak, y = pred)) + geom_line()
+ggplot(sharedFEDataNum(cwb, "oldpeak"), aes(x = oldpeak, y = pred)) + geom_line()
+ggplot(sharedFEDataNum(cwb, "trestbps"), aes(x = trestbps, y = pred)) + geom_line()
 
-ggplot(siteFEDataNum(cwb, "simcol"), aes(x = simcol, y = pred, color = server)) + geom_line()
 ggplot(siteFEDataNum(cwb, "oldpeak"), aes(x = oldpeak, y = pred, color = server)) + geom_line()
 ggplot(siteFEDataNum(cwb, "age"), aes(x = age, y = pred, color = server)) + geom_line()
-ggplot(siteFEDataNum(cwb, "trestbps"), aes(x = trestbps, y = pred, color = server)) + geom_line()
 
 ggplot(siteFEDataCat(cwb, "cp"), aes(x = "", y = pred, color = server, shape = server)) +
   geom_point(size = 4, position = position_dodge2(width = 0.75)) +
   geom_boxplot(show.legend = FALSE) +
   xlab("") +
   facet_wrap(cp ~ ., ncol = 4)
+
+ggplot(sharedFEDataCat(cwb, "cp"), aes(x = cp, y = pred, color = cp, shape = cp)) +
+  geom_point(size = 4, position = position_dodge2(width = 0.75)) +
+  geom_boxplot(show.legend = FALSE) +
+  xlab("")
 
 # ---------------------------------------------------------------------------------------- #
 #                                Comparison to compboost                                   #
@@ -131,7 +124,5 @@ datasets = list.files(here::here("usecase/data"), full.names = TRUE)
 
 ll_dfs = lapply(datasets[-3], readData, rm_pcols = TRUE, add_source = TRUE)
 df_full = do.call(rbind, lapply(ll_dfs, na.omit))
-
-library(compboost)
 
 datashield.logout(connections)
