@@ -285,7 +285,7 @@ Character containing the base learner name.}
 \subsection{Method \code{updatePenalty()}}{
 Re-set the penalty terms.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ClientModel$updatePenalty(ll_pen)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ClientModel$updatePenalty(ll_pen, anistrop = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -293,6 +293,9 @@ Re-set the penalty terms.
 \describe{
 \item{\code{ll_pen}}{(`list()`)\cr
 Named list with new penalty terms.}
+
+\item{\code{anistrop}}{(`logical(1L)`)\cr
+Flag indicating whether the penalty should be done anistrop or isotrop.}
 }
 \if{html}{\out{</div>}}
 }

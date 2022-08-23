@@ -243,16 +243,27 @@ ClientModel = R6Class("ClientModel",
     #' Re-set the penalty terms.
     #' @param ll_pen (`list()`)\cr
     #'   Named list with new penalty terms.
-    updatePenalty = function(ll_pen) {
-      checkmate::assertList(ll_pen)
+    #' @param anistrop (`logical(1L)`)\cr
+    #'   Flag indicating whether the penalty should be done anistrop or isotrop.
+    updatePenalty = function(ll_pen, anistrop = TRUE) {
+      if (! anistrop) {
+        checkmate::assertList(ll_pen)
 
-      blnames = names(ll_pen)
-      blnames0 = names(private$p_bls)
+        blnames = names(ll_pen)
+        blnames0 = names(private$p_bls)
 
-      nuisance = lapply(blnames, checkmate::assertChoice, choices = blnames0)
+        nuisance = lapply(blnames, checkmate::assertChoice, choices = blnames0)
 
-      for (bln in blnames) {
-        private$p_bls[[bln]]$updatePenalty(ll_pen[[bln]])
+        for (bln in blnames) {
+          private$p_bls[[bln]]$updatePenalty(ll_pen[[bln]])
+        }
+      } else {
+        checkmate::assertNumeric(ll_pen)
+
+        blp = private$bls[[bln]]$getPenalty()
+        blpmat = private$bls[[bln]]$getPenaltyMat()
+        pnew = blp * blpmat + ll_pen * diag(ncol(blpmat))
+        private$bls[[bln]]$updatePenalty(pnew)
       }
     },
 

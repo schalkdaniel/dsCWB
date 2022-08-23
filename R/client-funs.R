@@ -80,8 +80,10 @@ getRisk = function(model_symbol, risk_type = "train") {
 #'   The name of the model at the server.
 #' @param ll_pen_binary (`character(1L)`)\cr
 #'   Named list with new penalty terms encoded by `encodeObject`.
+#' @param anistrop (`logical(1L)`)\cr
+#'   Flag indicating whether the penalty should be done anistrop or isotrop.
 #' @export
-updateClientPenalty = function(model_symbol, ll_pen_binary) {
+updateClientPenalty = function(model_symbol, ll_pen_binary, anistrop = TRUE) {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
   checkmate::assertCharacter(ll_pen_binary, len = 1L, any.missing = FALSE)
 

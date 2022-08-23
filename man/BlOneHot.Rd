@@ -16,6 +16,7 @@ predictions, fitting parameters, etc.
 \item \href{#method-initDataXtX}{\code{BlOneHot$initDataXtX()}}
 \item \href{#method-initEmpty}{\code{BlOneHot$initEmpty()}}
 \item \href{#method-getXtX}{\code{BlOneHot$getXtX()}}
+\item \href{#method-getPenalty}{\code{BlOneHot$getPenalty()}}
 \item \href{#method-getPenaltyMat}{\code{BlOneHot$getPenaltyMat()}}
 \item \href{#method-getXty}{\code{BlOneHot$getXty()}}
 \item \href{#method-train}{\code{BlOneHot$train()}}
@@ -156,6 +157,16 @@ Set the penalty (just for information, has no effect).}
 Get XtX.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{BlOneHot$getXtX()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getPenalty"></a>}}
+\if{latex}{\out{\hypertarget{method-getPenalty}{}}}
+\subsection{Method \code{getPenalty()}}{
+Get penalty.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{BlOneHot$getPenalty()}\if{html}{\out{</div>}}
 }
 
 }

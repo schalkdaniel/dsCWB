@@ -443,6 +443,12 @@ BlOneHot = R6Class("BlOneHot",
     },
 
     #' @description
+    #' Get penalty.
+    getPenalty = function() {
+      return(private$p_penalty)
+    },
+
+    #' @description
     #' Get penalty matrix.
     getPenaltyMat = function() {
       return(private$p_penmat)

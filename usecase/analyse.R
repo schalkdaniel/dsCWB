@@ -40,8 +40,13 @@ cwb = dsCWB(connections, symbol, target, feature_names, mstop = 2000L,
   val_fraction = 0.2, patience = 3L, seed = 31415L, positive = "yes",
   df = 5, learning_rate = 0.01, derivs = 3L)
 
-#save(cwb, file = "usecase/model-lr01.Rda")
-#load("usecase/model-lr01.Rda")
+# Get hyperparameters:
+# cwb_site_hps = datashield.aggregate(connections, "getBlHyperpars('cm')")
+
+datashield.logout(connections)
+
+#save(cwb, cwb_site_hps, file = here::here("usecase/model-lr01.Rda"))
+#load(here::here("usecase/model-lr01.Rda"))
 
 l = cwb$getLog()
 
@@ -90,39 +95,106 @@ ggplot(sharedFEDataCat(cwb, "cp"), aes(x = cp, y = pred, color = cp, shape = cp)
 #                                Comparison to compboost                                   #
 # ---------------------------------------------------------------------------------------- #
 
-readData = function(file, add_source = FALSE, add_id = FALSE, rm_pcols = TRUE) {
-  if (grepl("reprocessed", file))
-    tmp = read.csv(file, sep = " ", header = FALSE, na.strings = c("?", "-9", "-9.0"))
-  else
-    tmp = read.csv(file, header = FALSE, na.strings = c("?", "-9", "-9.0"))
 
-  cnames = c("age", "sex", "cp", "trestbps", "chol", "fbs", "restecg", "thalach",
-    "exang", "oldpeak", "slope", "ca", "thal", "num")
-
-  fvals = c("sex", "cp", "fbs", "restecg", "exang", "slope", "ca", "thal", "num")
-  colnames(tmp) = cnames
-
-  for (fv in fvals) {
-    tmp[[fv]] = as.factor(as.integer(as.character(tmp[[fv]])))
-  }
-  if (add_source) tmp$source = strsplit(file, "[.]")[[1]][2]
-  if (add_id) tmp$id = seq_len(nrow(tmp))
-
-  tmp$heart_disease = ifelse(tmp$num == "1", "yes", "no")
-
-  if (rm_pcols) {
-    tmp$num = NULL
-    tmp$thal = NULL # 486 missings in total
-    tmp$ca = NULL # 611 missings in total
-    tmp$slope = NULL # 309 missings in total
-    tmp$fbs = NULL # Too many missings for switzerland
-  }
-  return(tmp)
-}
+source(here::here("usecase/helper.R"))
 
 datasets = list.files(here::here("usecase/data"), full.names = TRUE)
 
-ll_dfs = lapply(datasets[-3], readData, rm_pcols = TRUE, add_source = TRUE)
+ll_dfs = lapply(datasets, readData, add_source = TRUE)
 df_full = do.call(rbind, lapply(ll_dfs, na.omit))
 
-datashield.logout(connections)
+#remotes::install_github("schalkdaniel/compboost", ref = "dev")
+library(compboost)
+
+df = 3
+anistrop = TRUE
+
+site_var = "source"
+target = "heart_disease"
+
+fnum = c("age", "trestbps", "thalach", "oldpeak")
+fcat = c("sex", "cp", "restecg", "exang")
+
+set.seed(10L)
+cboost = Compboost$new(df_full, target = target, loss = LossBinomial$new(),
+  learning_rate = 0.01, oob_fraction = 0.2, use_early_stopping = TRUE,
+  stop_args = list(eps_for_break = 0, patience = 3))
+
+for (f in fnum) {
+  cboost$addBaselearner(f, "spline", BaselearnerPSpline, df = df)
+  cboost$addTensor(f, site_var, df1 = df, df2 = 1, anistrop)
+}
+
+for (f in fcat) {
+  uvals = unique(df_full[[f]])
+  df0 = ifelse(length(uvals) < df, length(uvals), df)
+  cboost$addBaselearner(f, "one-hot", BaselearnerCategoricalRidge, df = df0)
+  cboost$addTensor(f, site_var, df1 = df0, df2 = 1, anistrop)
+}
+
+# Get list of base learners:
+cboost$getBaselearnerNames()
+
+cboost$train(10000L)
+
+table(cboost$getSelectedBaselearner())
+
+plotRisk(cboost)
+plotBaselearnerTraces(cboost)
+
+plotPEUni(cboost, "oldpeak")
+plotTensor(cboost, "oldpeak_source_tensor")
+plotTensor(cboost, "cp_source_tensor")
+
+
+## Manually calculate penalties =============================================== ##
+
+(ptensor = cboost$baselearner_list$oldpeak_source_tensor$factory$getPenalty())
+pspline = cboost$baselearner_list$oldpeak_spline$factory$getPenalty()
+
+
+dmat = cboost$baselearner_list$oldpeak_source_tensor$factory$getData()
+xtx = dmat %*% t(dmat)
+pmat = cboost$baselearner_list$oldpeak_source_tensor$factory$getPenaltyMat()
+
+cpsp::demmlerReinsch(xtx, pmat, df)
+ptensor
+
+
+xtx_source = diag(table(df_full$source))
+pmat_source = diag(ncol(xtx_source))
+psource = cpsp::demmlerReinsch(xtx_source, pmat_source, 1)
+
+penaltyKron = function(A, B) {
+  Pa = diag(ncol(A))
+  Pb = diag(ncol(B))
+
+  return(kronecker(A, Pb) + kronecker(Pa, B))
+}
+
+a = rnorm(1)
+b = rnorm(1)
+
+pp = penaltyKron(a * pmat, b * pmat_source)
+
+psource * pspline
+ptensor
+pmat[1:10, 1:10]
+
+## Manually calculate penalties =============================================== ##
+
+
+
+
+
+# Compare to the distributed algorithm:
+devtools::load_all()
+load(here::here("usecase/model-lr01.Rda"))
+
+l = cwb$getLog()
+max(l$iteration)
+
+cwb_site_hps$cleveland[["oldpeak-spline"]]
+bl = cwb$bls[["oldpeak-spline"]]
+bl$getHyperpars()$penalty
+

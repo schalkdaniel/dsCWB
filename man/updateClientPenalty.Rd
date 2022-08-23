@@ -4,7 +4,7 @@
 \alias{updateClientPenalty}
 \title{Update the penalties of the client models.}
 \usage{
-updateClientPenalty(model_symbol, ll_pen_binary)
+updateClientPenalty(model_symbol, ll_pen_binary, anistrop = TRUE)
 }
 \arguments{
 \item{model_symbol}{(`character(1L)`)\cr
@@ -12,6 +12,9 @@ The name of the model at the server.}
 
 \item{ll_pen_binary}{(`character(1L)`)\cr
 Named list with new penalty terms encoded by `encodeObject`.}
+
+\item{anistrop}{(`logical(1L)`)\cr
+Flag indicating whether the penalty should be done anistrop or isotrop.}
 }
 \description{
 Update the penalties of the client models.
