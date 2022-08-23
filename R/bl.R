@@ -261,6 +261,19 @@ BlSpline = R6Class("BlSpline",
 
     #' @description
     #' Re-set the penalty terms.
+    #' @param penmat (`matrix()`)\cr
+    #'   New penalty matrix.
+    updatePenaltyMat = function(penmat) {
+      nr = nrow(private$p_penmat)
+      nc = ncol(private$p_penmat)
+      checkmate::assertMatrix(penmat, any.missing = FALSE, nrows = nr, ncols = nc)
+      private$p_penalty = pen
+      private$p_penmat = penmat
+      private$p_xtx_inv = solve(private$p_xtx + penmat)
+    },
+
+    #' @description
+    #' Re-set the penalty terms.
     #' @param pen (`numeric(1)`)\cr
     #'   New penalty terms.
     updatePenalty = function(pen) {
@@ -571,6 +584,19 @@ BlOneHot = R6Class("BlOneHot",
     #' Get knot range.
     getDictionary = function() {
       return(private$p_dict)
+    },
+
+    #' @description
+    #' Re-set the penalty terms.
+    #' @param penmat (`matrix()`)\cr
+    #'   New penalty matrix.
+    updatePenaltyMat = function(penmat) {
+      nr = nrow(private$p_penmat)
+      nc = ncol(private$p_penmat)
+      checkmate::assertMatrix(penmat, any.missing = FALSE, nrows = nr, ncols = nc)
+      private$p_penalty = pen
+      private$p_penmat = penmat
+      private$p_xtx_inv = solve(private$p_xtx + penmat)
     },
 
     #' @description

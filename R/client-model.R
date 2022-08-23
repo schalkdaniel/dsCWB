@@ -266,7 +266,7 @@ ClientModel = R6Class("ClientModel",
           blp = private$p_bls[[bln]]$getPenalty()
           blpmat = private$p_bls[[bln]]$getPenaltyMat()
           pnew = blp * blpmat + ll_pen * diag(ncol(blpmat))
-          private$p_bls[[bln]]$updatePenalty(pnew)
+          private$p_bls[[bln]]$updatePenaltyMat(pnew)
         }
       }
     },

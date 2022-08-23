@@ -24,6 +24,7 @@ predictions, fitting parameters, etc.
 \item \href{#method-predictNewdata}{\code{BlSpline$predictNewdata()}}
 \item \href{#method-updateParam}{\code{BlSpline$updateParam()}}
 \item \href{#method-getKnotRange}{\code{BlSpline$getKnotRange()}}
+\item \href{#method-updatePenaltyMat}{\code{BlSpline$updatePenaltyMat()}}
 \item \href{#method-updatePenalty}{\code{BlSpline$updatePenalty()}}
 \item \href{#method-getFeature}{\code{BlSpline$getFeature()}}
 \item \href{#method-getHyperpars}{\code{BlSpline$getHyperpars()}}
@@ -309,6 +310,24 @@ Get knot range.
 \if{html}{\out{<div class="r">}}\preformatted{BlSpline$getKnotRange()}\if{html}{\out{</div>}}
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-updatePenaltyMat"></a>}}
+\if{latex}{\out{\hypertarget{method-updatePenaltyMat}{}}}
+\subsection{Method \code{updatePenaltyMat()}}{
+Re-set the penalty terms.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{BlSpline$updatePenaltyMat(penmat)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{penmat}}{(`matrix()`)\cr
+New penalty matrix.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-updatePenalty"></a>}}
