@@ -24,7 +24,6 @@ predictions, fitting parameters, etc.
 \item \href{#method-predictNewdata}{\code{BlOneHot$predictNewdata()}}
 \item \href{#method-updateParam}{\code{BlOneHot$updateParam()}}
 \item \href{#method-getDictionary}{\code{BlOneHot$getDictionary()}}
-\item \href{#method-updatePenaltyMat}{\code{BlOneHot$updatePenaltyMat()}}
 \item \href{#method-updatePenalty}{\code{BlOneHot$updatePenalty()}}
 \item \href{#method-getFeature}{\code{BlOneHot$getFeature()}}
 \item \href{#method-getHyperpars}{\code{BlOneHot$getHyperpars()}}
@@ -300,30 +299,12 @@ Get knot range.
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-updatePenaltyMat"></a>}}
-\if{latex}{\out{\hypertarget{method-updatePenaltyMat}{}}}
-\subsection{Method \code{updatePenaltyMat()}}{
-Re-set the penalty terms.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{BlOneHot$updatePenaltyMat(penmat)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{penmat}}{(`matrix()`)\cr
-New penalty matrix.}
-}
-\if{html}{\out{</div>}}
-}
-}
-\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-updatePenalty"></a>}}
 \if{latex}{\out{\hypertarget{method-updatePenalty}{}}}
 \subsection{Method \code{updatePenalty()}}{
 Re-set the penalty terms.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{BlOneHot$updatePenalty(pen)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{BlOneHot$updatePenalty(pen, anistrop = TRUE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -331,6 +312,9 @@ Re-set the penalty terms.
 \describe{
 \item{\code{pen}}{(`numeric(1)`)\cr
 New penalty terms.}
+
+\item{\code{anistrop}}{(`logical(1L)`)\cr
+Flag indicating whether the penalty should be done anistrop or isotrop.}
 }
 \if{html}{\out{</div>}}
 }

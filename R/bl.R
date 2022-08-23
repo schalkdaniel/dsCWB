@@ -261,25 +261,22 @@ BlSpline = R6Class("BlSpline",
 
     #' @description
     #' Re-set the penalty terms.
-    #' @param penmat (`matrix()`)\cr
-    #'   New penalty matrix.
-    updatePenaltyMat = function(penmat) {
-      nr = nrow(private$p_penmat)
-      nc = ncol(private$p_penmat)
-      checkmate::assertMatrix(penmat, any.missing = FALSE, nrows = nr, ncols = nc)
-      private$p_penalty = pen
-      private$p_penmat = penmat
-      private$p_xtx_inv = solve(private$p_xtx + penmat)
-    },
-
-    #' @description
-    #' Re-set the penalty terms.
     #' @param pen (`numeric(1)`)\cr
     #'   New penalty terms.
-    updatePenalty = function(pen) {
+    #' @param anistrop (`logical(1L)`)\cr
+    #'   Flag indicating whether the penalty should be done anistrop or isotrop.
+    updatePenalty = function(pen, anistrop = TRUE) {
       checkmate::assertNumeric(pen, len = 1L, lower = 0, any.missing = FALSE)
-      private$p_penalty = pen
-      private$p_xtx_inv = solve(private$p_xtx + private$p_penalty * private$p_penmat)
+
+      if (anistrop) {
+        private$p_penalty = c(private$p_penalty, pen)
+        p0 = pen * diag(ncol(private$p_penmat))
+        pnew = private$p_penalty * private$p_penmat + p0
+        private$p_xtx_inv = solve(private$p_xtx + pnew)
+      } else {
+        private$p_penalty = pen
+        private$p_xtx_inv = solve(private$p_xtx + private$p_penalty * private$p_penmat)
+      }
     },
 
     #' @description
@@ -588,25 +585,22 @@ BlOneHot = R6Class("BlOneHot",
 
     #' @description
     #' Re-set the penalty terms.
-    #' @param penmat (`matrix()`)\cr
-    #'   New penalty matrix.
-    updatePenaltyMat = function(penmat) {
-      nr = nrow(private$p_penmat)
-      nc = ncol(private$p_penmat)
-      checkmate::assertMatrix(penmat, any.missing = FALSE, nrows = nr, ncols = nc)
-      private$p_penalty = pen
-      private$p_penmat = penmat
-      private$p_xtx_inv = solve(private$p_xtx + penmat)
-    },
-
-    #' @description
-    #' Re-set the penalty terms.
     #' @param pen (`numeric(1)`)\cr
     #'   New penalty terms.
-    updatePenalty = function(pen) {
+    #' @param anistrop (`logical(1L)`)\cr
+    #'   Flag indicating whether the penalty should be done anistrop or isotrop.
+    updatePenalty = function(pen, anistrop = TRUE) {
       checkmate::assertNumeric(pen, len = 1L, lower = 0, any.missing = FALSE)
-      private$p_penalty = pen
-      private$p_xtx_inv = diag(1 / diag(private$p_xtx + private$p_penalty * private$p_penmat))
+      if (anistrop) {
+        private$p_penalty = c(private$p_penalty, pen)
+        p0 = pen * diag(ncol(private$p_penmat))
+        pnew = private$p_penalty * private$p_penmat + p0
+        private$p_xtx_inv = solve(private$p_xtx + pnew)
+
+      } else {
+        private$p_penalty = pen
+        private$p_xtx_inv = diag(1 / diag(private$p_xtx + private$p_penalty * private$p_penmat))
+      }
     },
 
     #' @description

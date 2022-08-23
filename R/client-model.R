@@ -256,17 +256,17 @@ ClientModel = R6Class("ClientModel",
         nuisance = lapply(blnames, checkmate::assertChoice, choices = blnames0)
 
         for (bln in blnames) {
-          private$p_bls[[bln]]$updatePenalty(ll_pen[[bln]])
+          private$p_bls[[bln]]$updatePenalty(ll_pen[[bln]], anistrop)
         }
       } else {
         checkmate::assertNumeric(ll_pen)
         blnames = names(private$p_bls)
 
         for (bln in blnames) {
-          blp = private$p_bls[[bln]]$getPenalty()
-          blpmat = private$p_bls[[bln]]$getPenaltyMat()
-          pnew = blp * blpmat + ll_pen * diag(ncol(blpmat))
-          private$p_bls[[bln]]$updatePenaltyMat(pnew)
+          #blp = private$p_bls[[bln]]$getPenalty()
+          #blpmat = private$p_bls[[bln]]$getPenaltyMat()
+          #pnew = blp * blpmat + ll_pen * diag(ncol(blpmat))
+          private$p_bls[[bln]]$updatePenalty(ll_pen, anistrop)
         }
       }
     },
