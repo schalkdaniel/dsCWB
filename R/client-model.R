@@ -260,12 +260,13 @@ ClientModel = R6Class("ClientModel",
         }
       } else {
         checkmate::assertNumeric(ll_pen)
+        blnames = names(private$p_bls)
 
         for (bln in blnames) {
-          blp = private$bls[[bln]]$getPenalty()
-          blpmat = private$bls[[bln]]$getPenaltyMat()
+          blp = private$p_bls[[bln]]$getPenalty()
+          blpmat = private$p_bls[[bln]]$getPenaltyMat()
           pnew = blp * blpmat + ll_pen * diag(ncol(blpmat))
-          private$bls[[bln]]$updatePenalty(pnew)
+          private$p_bls[[bln]]$updatePenalty(pnew)
         }
       }
     },
