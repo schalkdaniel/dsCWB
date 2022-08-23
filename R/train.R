@@ -316,9 +316,10 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
 
   pmat_site = diag(length(xtxs))
   xtx_site = diag(ntrain)
-  penalty_site = cpsp::demmlerReinsch(xtx_site, pmat_site, dfa)
+  penalty_adjusted = cpsp::demmlerReinsch(xtx_site, pmat_site, 1)
+  #penalty_site = cpsp::demmlerReinsch(xtx_site, pmat_site, dfa)
 
-  penalty_adjusted = calculateDF(xtxs, hm, dfa)
+  #penalty_adjusted = calculateDF(xtxs, hm, dfa)
   eval(parse(text = paste0("cl_pen_update = quote(updateClientPenalty(", mchar, ", ",
     transChar(encodeObject(penalty_adjusted)), "))")))
 

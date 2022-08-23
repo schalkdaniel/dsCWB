@@ -88,7 +88,11 @@ updateClientPenalty = function(model_symbol, ll_pen_binary, anistrop = TRUE) {
   checkmate::assertCharacter(ll_pen_binary, len = 1L, any.missing = FALSE)
 
   ll_pen = decodeBinary(ll_pen_binary)
-  checkmate::assertList(ll_pen)
+  if (anistrop) {
+    checkmate::assertNumeric(ll_pen, len = 1L, any.missing = FALSE)
+  } else {
+    checkmate::assertList(ll_pen)
+  }
 
   cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
   cm$updatePenalty(ll_pen)

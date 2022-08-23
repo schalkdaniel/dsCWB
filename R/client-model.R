@@ -246,6 +246,7 @@ ClientModel = R6Class("ClientModel",
     #' @param anistrop (`logical(1L)`)\cr
     #'   Flag indicating whether the penalty should be done anistrop or isotrop.
     updatePenalty = function(ll_pen, anistrop = TRUE) {
+      checkmate::assertLogical(x = anistrop, len = 1L, any.missing = FALSE)
       if (! anistrop) {
         checkmate::assertList(ll_pen)
 

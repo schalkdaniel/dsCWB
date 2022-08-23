@@ -36,7 +36,7 @@ symbol = "D"
 target = "heart_disease"
 feature_names = setdiff(dsBaseClient::ds.names("D", connections)[[1]], target)
 
-cwb = dsCWB(connections, symbol, target, feature_names, mstop = 2000L,
+cwb = dsCWB(connections, symbol, target, feature_names, mstop = 100L,
   val_fraction = 0.2, patience = 3L, seed = 31415L, positive = "yes",
   df = 5, learning_rate = 0.01, derivs = 3L)
 
