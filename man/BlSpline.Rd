@@ -16,6 +16,7 @@ predictions, fitting parameters, etc.
 \item \href{#method-initDataXtX}{\code{BlSpline$initDataXtX()}}
 \item \href{#method-initEmpty}{\code{BlSpline$initEmpty()}}
 \item \href{#method-getXtX}{\code{BlSpline$getXtX()}}
+\item \href{#method-getPenalty}{\code{BlSpline$getPenalty()}}
 \item \href{#method-getPenaltyMat}{\code{BlSpline$getPenaltyMat()}}
 \item \href{#method-getXty}{\code{BlSpline$getXty()}}
 \item \href{#method-train}{\code{BlSpline$train()}}
@@ -168,6 +169,16 @@ Set the penalty (just for information, has no effect).}
 Get XtX.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{BlSpline$getXtX()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getPenalty"></a>}}
+\if{latex}{\out{\hypertarget{method-getPenalty}{}}}
+\subsection{Method \code{getPenalty()}}{
+Get penalty.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{BlSpline$getPenalty()}\if{html}{\out{</div>}}
 }
 
 }
