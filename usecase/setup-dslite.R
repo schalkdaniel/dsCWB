@@ -36,55 +36,35 @@ source(here::here("usecase/helper.R"))
 
 
 ## ========================================================================== ##
-##                             UPLOAD TO DATASHIELD                           ##
+##                                SETUP SERVER                                ##
 ## ========================================================================== ##
 
-surl     = "https://opal-demo.obiba.org/"
-username = "administrator"
-password = "password"
-
-opal = opalr::opal.login(username = username, password = password, url = surl)
-
-opalr::opal.project_delete(opal, project = "SLDS-TEST")
-opalr::opal.project_create(opal, project = "SLDS-TEST", database = "mongodb")
+library(DSLite)
 
 datasets = list.files(here::here("usecase/data"), full.names = TRUE)
 
-## Short inspection of datasets -------------------- ##
-
-# ll_dfs = lapply(datasets, readData, rm_pcols = TRUE)
-# tmp = do.call(rbind, ll_dfs)
-#
-# table(complete.cases(tmp))
-# sapply(tmp, function(x) sum(is.na(x)))
-#
-# lapply(ll_dfs, function(tmp) table(complete.cases(tmp)))
-# lapply(ll_dfs, function(tmp) sapply(tmp, function(x) sum(is.na(x))))
-
-## ------------------------------------------------- ##
-
-for (d in datasets) {
-  opalr::opal.table_save(opal,
-    tibble = tibble::as_tibble(na.omit(readData(d, add_id = TRUE))),
-    project = "SLDS-TEST",
-    table = strsplit(d, "[.]")[[1]][2],
-    overwrite = TRUE,
-    force = TRUE)
+ll_data = list()
+for (file in datasets) {
+  ll_data[[strsplit(file, "[.]")[[1]][2]]] = na.omit(readData(file))
 }
 
-## ========================================================================== ##
-##                              INSTALL PACKAGE                               ##
-## ========================================================================== ##
+dslite_server = newDSLiteServer(tables = ll_data)
 
-ch1 = opalr::dsadmin.install_github_package(opal = opal, pkg = "dsCWB", username = "schalkdaniel", ref = "main")
+dslite_server$config(defaultDSConfiguration(include = c("dsBase","dsCWB")))
+#dslite_server$config()
 
-if (ch1) {
-  opalr::dsadmin.publish_package(opal = opal, pkg = "dsCWB")
-  message("[", Sys.time(), "] Successfully installed dsCWB")
-} else {
-  message("[", Sys.time(), "] Could not install package! :-(")
+builder <- DSI::newDSLoginBuilder()
+
+for (s in names(ll_data)) {
+  builder$append(server = s, url = "dslite_server", driver = "DSLiteDriver")
+}
+logindata = builder$build()
+
+connections = datashield.login(logins = logindata, assign = TRUE)
+
+
+for (s in names(ll_data)) {
+  datashield.assign.table(table = s, conns = connections[s], symbol = "D")
 }
 
-opalr::opal.logout(opal)
-
-rm(list = ls())
+rm(datasets, ll_data, s, file, logindata, readData)

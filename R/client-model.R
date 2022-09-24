@@ -33,8 +33,15 @@ ClientModel = R6Class("ClientModel",
     #'   Character indicating the positive class in the binary classification setting.
     #' @param seed (`integer(1L)`)\cr
     #'   Seed used for drawing the validation data.
+    #' @param envir (`environment()`)\cr
+    #'   Environment of the data.
+    #' @param random_intercept (`logical(1L)`)\cr
+    #'   Indicator whether random intercepts should be added or not.
+    #' @param random_intercept_df (`integer(1L)`)\cr
+    #'   Penalty of the random intercept.
     initialize = function(symbol = "D", target, feature_names = NULL, learning_rate = 0.1, df = 5L,
-      nknots = 20L, ord = 3L, derivs = 2L, val_fraction = NULL, positive = NULL, seed = NULL) {
+      nknots = 20L, ord = 3L, derivs = 2L, val_fraction = NULL, positive = NULL, seed = NULL,
+      envir = private$p_envir, random_intercept = TRUE, random_intercept_df = 2) {
 
       checkSymbol(symbol)
 
@@ -51,8 +58,13 @@ ClientModel = R6Class("ClientModel",
       checkmate::assertNumeric(x = val_fraction, len = 1L, any.missing = FALSE, null.ok = TRUE)
       checkmate::assertCharacter(x = positive, len = 1L, any.missing = FALSE, null.ok = TRUE)
       checkmate::assertIntegerish(x = seed, len = 1L, any.missing = FALSE, null.ok = TRUE)
+      checkmate::assertEnvironment(envir)
+      checkmate::assertLogical(x = random_intercept, len = 1L, any.missing = FALSE)
+      checkmate::assertIntegerish(x = random_intercept_df, len = 1L, any.missing = FALSE, null.ok = TRUE)
 
-      n = eval(parse(text = paste0("nrow(", symbol, ")")), envir = .GlobalEnv)
+      private$p_envir = envir
+
+      n = eval(parse(text = paste0("nrow(", symbol, ")")), envir = private$p_envir)
       if (! is.null(val_fraction)) {
         if (! is.null(seed)) set.seed(seed)
         val_idx = sample(seq_len(n), ceiling(n * val_fraction))
@@ -71,6 +83,8 @@ ClientModel = R6Class("ClientModel",
       private$p_derivs = derivs
       private$p_val_idx = val_idx
       private$p_train_idx = setdiff(seq_len(n), val_idx)
+      private$p_random_intercept = random_intercept
+      private$p_random_intercept_df = random_intercept_df
 
       tt = private$getTargetRaw()
       private$p_task = getTaskType(tt)
@@ -88,7 +102,7 @@ ClientModel = R6Class("ClientModel",
         private$p_loss = LossQuadratic$new()
       }
       if (is.null(feature_names)) {
-        fn = eval(parse(text = paste0("names(", private$p_symbol, ")")), envir = .GlobalEnv)
+        fn = eval(parse(text = paste0("names(", private$p_symbol, ")")), envir = private$p_envir)
         private$p_feature_names = setdiff(fn, target)
       }
     },
@@ -245,28 +259,52 @@ ClientModel = R6Class("ClientModel",
     #'   Named list with new penalty terms.
     #' @param anistrop (`logical(1L)`)\cr
     #'   Flag indicating whether the penalty should be done anistrop or isotrop.
-    updatePenalty = function(ll_pen, anistrop = TRUE) {
+    #' @param simple (`logical(1L)`)\cr
+    #'   Flag indicating that just the penalty is updated but no tensor operation is applied.
+    #' @param update_random_intercept (`logical(1L)`)\cr
+    #'   Flag indicating whether the random intercept penalty should also get updated or not.
+    updatePenalty = function(ll_pen, anistrop = TRUE, simple = FALSE, update_random_intercept = FALSE) {
       checkmate::assertLogical(x = anistrop, len = 1L, any.missing = FALSE)
-      if (! anistrop) {
+      if (simple) {
         checkmate::assertList(ll_pen)
 
         blnames = names(ll_pen)
+        if (! update_random_intercept)
+          blnames = setdiff(blnames, "random_intercept")
+
         blnames0 = names(private$p_bls)
 
         nuisance = lapply(blnames, checkmate::assertChoice, choices = blnames0)
 
         for (bln in blnames) {
-          private$p_bls[[bln]]$updatePenalty(ll_pen[[bln]], anistrop)
+          private$p_bls[[bln]]$updatePenalty(ll_pen[[bln]], anistrop, simple)
         }
       } else {
-        checkmate::assertNumeric(ll_pen)
-        blnames = names(private$p_bls)
+        if (! anistrop) {
+          checkmate::assertList(ll_pen)
 
-        for (bln in blnames) {
-          #blp = private$p_bls[[bln]]$getPenalty()
-          #blpmat = private$p_bls[[bln]]$getPenaltyMat()
-          #pnew = blp * blpmat + ll_pen * diag(ncol(blpmat))
-          private$p_bls[[bln]]$updatePenalty(ll_pen, anistrop)
+          blnames = names(ll_pen)
+
+          if (! update_random_intercept)
+            blnames = setdiff(blnames, "random_intercept")
+
+          blnames0 = names(private$p_bls)
+
+          nuisance = lapply(blnames, checkmate::assertChoice, choices = blnames0)
+
+          for (bln in blnames) {
+            private$p_bls[[bln]]$updatePenalty(ll_pen[[bln]], anistrop, simple)
+          }
+        } else {
+          checkmate::assertNumeric(ll_pen)
+          blnames = names(private$p_bls)
+
+          if (! update_random_intercept)
+            blnames = setdiff(blnames, "random_intercept")
+
+          for (bln in blnames) {
+            private$p_bls[[bln]]$updatePenalty(ll_pen, anistrop, simple)
+          }
         }
       }
     },
@@ -277,6 +315,19 @@ ClientModel = R6Class("ClientModel",
     #'   List containing the initialization parameters.
     addBaselearners = function(ll_init) {
       checkmate::assertList(ll_init)
+
+      if (private$p_random_intercept) {
+        sn = get(".SNAME", envir = private$p_envir)
+        x = rep(sn, private$p_n)
+
+        tab = ll_init$random_intercept$table
+        bl = BlOneHot$new(tab)
+        bl$initData(x = x, feature = "random_intercept", df = private$p_random_intercept_df,
+          val_idx = private$p_val_idx, pen = 0)
+
+        private$p_bls[["random_intercept"]] = bl
+      }
+
       for (ff in private$p_feature_names) {
         x = private$getFeatureFromData(ff)
         if (is.numeric(x)) {
@@ -349,6 +400,14 @@ ClientModel = R6Class("ClientModel",
       return(list(
         ntrain = length(private$p_train_idx),
         nval = length(private$p_val_idx)))
+    },
+
+    #' @description
+    #' Get List of train and test indices.
+    getTrainValIndex = function() {
+      return(list(
+        train = private$p_train_idx,
+        test = private$p_val_idx))
     }
   ),
   active = list(
@@ -374,7 +433,7 @@ ClientModel = R6Class("ClientModel",
     #   Character containing the feature name.
     getFeatureFromData = function(feature) {
       checkmate::assertCharacter(x = feature, len = 1L, any.missing = FALSE)
-      x = eval(parse(text = paste0(private$p_symbol, "[[\"", feature, "\"]]")), envir = .GlobalEnv)
+      x = eval(parse(text = paste0(private$p_symbol, "[[\"", feature, "\"]]")), envir = private$p_envir)
       if (is.null(x)) stop("Feature \"", feature, "\" was not found in ", symbol)
       return(x)
     },
@@ -459,6 +518,9 @@ ClientModel = R6Class("ClientModel",
     p_offset = NULL,
     p_task = NULL,
     p_positive = NULL,
-    p_loss = NULL
+    p_loss = NULL,
+    p_envir = NULL,
+    p_random_intercept = TRUE,
+    p_random_intercept_df = 2
   )
 )

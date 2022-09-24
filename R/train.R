@@ -177,6 +177,10 @@ calculateDF = function(xtxs, hm, df) {
 #'   Indicator if the fitting trace should be printed or not.
 #' @param force_shared_iters (`integer(1L)`)\cr
 #'   Number of iterations in the beginning that are just training the shared effect.
+#' @param random_intercept (`logical(1L)`)\cr
+#'   Indicator whether random intercepts should be added or not.
+#' @param random_intercept_df (`integer(1L)`)\cr
+#'   Penalty of the random intercept.
 #' @return Client model of R6 class ClientModel.
 #' @importFrom DSI datashield.aggregate datashield.assign
 #' @examples
@@ -216,7 +220,7 @@ calculateDF = function(xtxs, hm, df) {
 dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L,
   learning_rate = 0.1, df = 5, nknots = 20L, ord = 3L, derivs = 2L, val_fraction = NULL,
   patience = NULL, eps_for_break = 0, positive = NULL, seed = NULL, trace = TRUE,
-  force_shared_iters = NULL) {
+  force_shared_iters = NULL, random_intercept = TRUE, random_intercept_df = 2) {
 
   checkConnection(connections)
 
@@ -235,6 +239,13 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   checkmate::assertCharacter(x = positive, len = 1L, any.missing = FALSE, null.ok = TRUE)
   checkmate::assertCount(x = seed, null.ok = TRUE)
   checkmate::assertCount(x = force_shared_iters, null.ok = TRUE)
+
+  if (random_intercept) {
+    cnms = names(ds.names(symbol, connections))
+    for (i in seq_along(connections)) {
+      ds.make(transChar(cnms[i]), ".SNAME", connections[i])
+    }
+  }
 
   if (length(df) > 2) stop("df must be of length <= 2")
 
@@ -270,13 +281,17 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   call_init_client_model = NULL
   eval(parse(text = paste0("call_init_client_model = quote(createClientModel(",
     symchar, ",", tchar, ", c(", fn, ") ,", learning_rate, ", ", dfs, ", ", nknots, ", ", ord, ", ",
-    derivs, ", ", oobchar, ", ", pchar, ", ", schar,
+    derivs, ", ", oobchar, ", ", pchar, ", ", schar, ", ", random_intercept, ", ", random_intercept_df,
   "))")))
   datashield.assign(connections, model_symbol, call_init_client_model)
 
   call_get_init = paste0("getClientInit(", symchar, ", \"", encodeObject(feature_names), "\")")
   cl_init = datashield.aggregate(connections, call_get_init)
   cli = aggregateInit(cl_init)
+
+  if (random_intercept)
+    cli$random_intercept = list(table = cnms, class = "categorical")
+
 
   cq = NULL
   call_init = paste0("initClientModel(", mchar, ", \"", encodeObject(cli), "\")")
@@ -306,7 +321,15 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
 
   # Init host model:
   hm$setOffset(co)
-  hm$addBaselearners(cli, ll_xtx)
+  if (random_intercept) {
+    ll_tmp = ll_xtx[which(! names(ll_xtx) == "random_intercept")]
+    cli_tmp = cli[which(! names(cli) == "random_intercept")]
+  } else {
+    ll_tmp = ll_xtx
+    cli_tmp = cli
+  }
+
+  hm$addBaselearners(cli_tmp, ll_tmp)
 
   cl_pen_update = NULL
   if (length(df) == 2)
@@ -314,21 +337,25 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   else
     dfa = df
 
-  pmat_site = diag(length(xtxs))
-  xtx_site = diag(ntrain)
-  penalty_adjusted = cpsp::demmlerReinsch(xtx_site, pmat_site, 1)
-  #penalty_site = cpsp::demmlerReinsch(xtx_site, pmat_site, dfa)
+  penalty_global = lapply(hm$bls, FUN = function(bl) bl$getPenalty())
 
-  #penalty_adjusted = calculateDF(xtxs, hm, dfa)
+  ns = ncol(ll_xtx$random_intercept)
+  pri = cpsp::demmlerReinsch(as.matrix(ll_xtx$random_intercept), diag(ns), random_intercept_df)
+  if (random_intercept) {
+    penalty_global$random_intercept = pri
+  }
   eval(parse(text = paste0("cl_pen_update = quote(updateClientPenalty(", mchar, ", ",
-    transChar(encodeObject(penalty_adjusted)), "))")))
-
+    transChar(encodeObject(penalty_global)), ", anistrop = FALSE, simple = TRUE, update_random_intercept = TRUE))")))
   datashield.assign(connections, model_symbol, cl_pen_update)
-  # datashield.aggregate(connections, quote(getBlHyperpars("cm")))
+
+  eval(parse(text = paste0("cl_pen_update = quote(updateClientPenalty(", mchar, ", ",
+    transChar(encodeObject(pri)), "))")))
+  datashield.assign(connections, model_symbol, cl_pen_update)
 
   # Training the model:
   train_iter = TRUE
   risk_old = Inf
+  early_stop = FALSE
   k = 1
   if (all(! is.null(patience), ! is.null(eps_for_break), ! is.null(val_fraction))) {
     p0 = 0
@@ -354,6 +381,11 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   while (train_iter) {
     # Get Xty and SSEs from fitted site-specific effects from the ds servers:
     ll_xty = datashield.aggregate(connections, paste0("getClientXty(", mchar, ")"))
+
+    if ("random_intercept" %in% names(ll_xty[[1]])) {
+      for (sn in names(ll_xty)) ll_xty[[sn]]$random_intercept = NULL
+    }
+
     ll_shared_effects_param = hm$getParam(aggregateXtX(ll_xty))
 
     cl_sses = paste0("getClientSSE(", mchar, ", \"", encodeObject(ll_shared_effects_param), "\")")
@@ -366,24 +398,7 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
 
     min_sse = getMinimalSSE(ll_sses, force_shared)
 
-
-    # Get risk:
-    ll_rt = datashield.aggregate(connections, eval(parse(text = paste0("quote(getRisk(", mchar, ", \"train\"))"))))
-    risk_train = Reduce("+", ll_rt) / sum(unlist(ntrain))
-
-    risk_val = NA
-    if (! is.null(val_fraction)) {
-      nval = vapply(winit, function(w) w$nval, integer(1L))
-      ll_rv = datashield.aggregate(connections, eval(parse(text = paste0("quote(getRisk(", mchar, ", \"val\"))"))))
-      risk_val = Reduce("+", ll_rv) / sum(unlist(nval))
-    }
-
-    # Add to log:
-    hm$log(names(min_sse), unname(attr(min_sse, "effect_type")), unname(min_sse), risk_train, risk_val)
-
     blname = transChar(names(min_sse))
-
-
     if (attr(min_sse, "effect_type") == "site") {
       # update client
       cl_update = paste0("quote(updateClientBaselearner(", mchar, ", ", blname, "))")
@@ -396,6 +411,20 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
         transChar(encodeObject(par)), "))")
       datashield.assign(connections, model_symbol, eval(parse(text = cl_update)))
     }
+
+    # Get risk:
+    ll_rt = datashield.aggregate(connections, eval(parse(text = paste0("quote(getRisk(", mchar, ", \"train\"))"))))
+    risk_train = Reduce("+", ll_rt) / sum(unlist(ntrain))
+    risk_val = NA
+    if (! is.null(val_fraction)) {
+      nval = vapply(winit, function(w) w$nval, integer(1L))
+      ll_rv = datashield.aggregate(connections, eval(parse(text = paste0("quote(getRisk(", mchar, ", \"val\"))"))))
+      risk_val = Reduce("+", ll_rv) / sum(unlist(nval))
+    }
+
+    # Add to log:
+    hm$log(names(min_sse), unname(attr(min_sse, "effect_type")), unname(min_sse), risk_train, risk_val)
+
 
 
     # Stop if maximal number of iterations is reached:

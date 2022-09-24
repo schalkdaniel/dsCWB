@@ -265,18 +265,27 @@ BlSpline = R6Class("BlSpline",
     #'   New penalty terms.
     #' @param anistrop (`logical(1L)`)\cr
     #'   Flag indicating whether the penalty should be done anistrop or isotrop.
-    updatePenalty = function(pen, anistrop = TRUE) {
+    #' @param simple (`logical(1L)`)\cr
+    #'   Flag indicating that just the penalty is updated but no tensor operation is applied.
+    updatePenalty = function(pen, anistrop = TRUE, simple = FALSE) {
       checkmate::assertNumeric(pen, len = 1L, lower = 0, any.missing = FALSE)
 
-      if (anistrop) {
-        private$p_penalty = c(private$p_penalty, pen)
-        p0 = pen * diag(ncol(private$p_penmat))
-        pnew = private$p_penalty * private$p_penmat + p0
+      if (simple) {
+        pnew = pen * private$p_penmat
         private$p_xtx_inv = solve(private$p_xtx + pnew)
-      } else {
         private$p_penalty = pen
-        private$p_xtx_inv = solve(private$p_xtx + private$p_penalty * private$p_penmat)
+      } else {
+        if (anistrop) {
+          p0 = pen * diag(ncol(private$p_penmat))
+          pnew = private$p_penalty * private$p_penmat + p0
+          private$p_xtx_inv = solve(private$p_xtx + pnew)
+          private$p_penalty = c(private$p_penalty, pen)
+        } else {
+          private$p_penalty = pen
+          private$p_xtx_inv = solve(private$p_xtx + private$p_penalty * private$p_penmat)
+        }
       }
+
     },
 
     #' @description
@@ -589,18 +598,28 @@ BlOneHot = R6Class("BlOneHot",
     #'   New penalty terms.
     #' @param anistrop (`logical(1L)`)\cr
     #'   Flag indicating whether the penalty should be done anistrop or isotrop.
-    updatePenalty = function(pen, anistrop = TRUE) {
+    #' @param simple (`logical(1L)`)\cr
+    #'   Flag indicating that just the penalty is updated but no tensor operation is applied.
+    updatePenalty = function(pen, anistrop = TRUE, simple = FALSE) {
       checkmate::assertNumeric(pen, len = 1L, lower = 0, any.missing = FALSE)
-      if (anistrop) {
-        private$p_penalty = c(private$p_penalty, pen)
-        p0 = pen * diag(ncol(private$p_penmat))
-        pnew = private$p_penalty * private$p_penmat + p0
+      if (simple) {
+        pnew = pen * private$p_penmat
         private$p_xtx_inv = solve(private$p_xtx + pnew)
-
-      } else {
         private$p_penalty = pen
-        private$p_xtx_inv = diag(1 / diag(private$p_xtx + private$p_penalty * private$p_penmat))
+      } else {
+        if (anistrop) {
+          p0 = pen * diag(ncol(private$p_penmat))
+          pnew = private$p_penalty * private$p_penmat + p0
+          private$p_penmat = pnew
+          private$p_xtx_inv = solve(private$p_xtx + pnew)
+          private$p_penalty = c(private$p_penalty, pen)
+
+        } else {
+          private$p_penalty = pen
+          private$p_xtx_inv = diag(1 / diag(private$p_xtx + private$p_penalty * private$p_penmat))
+        }
       }
+
     },
 
     #' @description
@@ -647,6 +666,7 @@ BlOneHot = R6Class("BlOneHot",
     p_param = NULL
   )
 )
+
 
 if (FALSE) {
   devtools::document()

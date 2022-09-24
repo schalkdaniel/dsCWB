@@ -24,10 +24,11 @@
 #' @return Client model of R6 class ClientModel.
 #' @export
 createClientModel = function(symbol, target, feature_names = NULL, learning_rate = 0.1, df = 5, nknots = 20L,
-  ord = 3L, derivs = 2L, val_fraction = NULL, positive = NULL, seed = NULL) {
+  ord = 3L, derivs = 2L, val_fraction = NULL, positive = NULL, seed = NULL,
+  random_intercept = TRUE, random_intercept_df = 2) {
 
   cm = ClientModel$new(symbol, target, feature_names, learning_rate, df, nknots, ord, derivs,
-    val_fraction, positive, seed)
+    val_fraction, positive, seed, envir = parent.frame(), random_intercept, random_intercept_df)
   return(cm)
 }
 
@@ -41,7 +42,7 @@ createClientModel = function(symbol, target, feature_names = NULL, learning_rate
 initClientModel = function(model_symbol, ll_init_binary) {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
   checkmate::assertCharacter(ll_init_binary, len = 1L, any.missing = FALSE)
-  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  cm = get(model_symbol, envir = parent.frame())
 
   ll_init = decodeBinary(ll_init_binary)
   checkmate::assertList(ll_init)
@@ -49,6 +50,7 @@ initClientModel = function(model_symbol, ll_init_binary) {
   #list(feature = c(min = 1, max = 2))
   cm$addBaselearners(ll_init)
 
+  #base::assign(x = model_symbol, value = cm, envir = parent.frame())
   return(cm)
 }
 
@@ -58,7 +60,7 @@ initClientModel = function(model_symbol, ll_init_binary) {
 #' @export
 getFeatureNames = function(model_symbol) {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
-  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  cm = get(model_symbol, envir = parent.frame())
   return(cm$getFeatureNames())
 }
 
@@ -71,7 +73,7 @@ getFeatureNames = function(model_symbol) {
 getRisk = function(model_symbol, risk_type = "train") {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
   checkmate::assertChoice(risk_type, choices = c("full", "train", "val"))
-  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  cm = get(model_symbol, envir = parent.frame())
   return(cm$getRisk(risk_type))
 }
 
@@ -82,20 +84,31 @@ getRisk = function(model_symbol, risk_type = "train") {
 #'   Named list with new penalty terms encoded by `encodeObject`.
 #' @param anistrop (`logical(1L)`)\cr
 #'   Flag indicating whether the penalty should be done anistrop or isotrop.
+#' @param simple (`logical(1L)`)\cr
+#'   Flag indicating that just the penalty is updated but no tensor operation is applied.
+#' @param update_random_intercept (`logical(1L)`)\cr
+#'   Flag indicating whether the random intercept penalty should also get updated or not.
 #' @export
-updateClientPenalty = function(model_symbol, ll_pen_binary, anistrop = TRUE) {
+updateClientPenalty = function(model_symbol, ll_pen_binary, anistrop = TRUE, simple = FALSE,
+  update_random_intercept = FALSE) {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
   checkmate::assertCharacter(ll_pen_binary, len = 1L, any.missing = FALSE)
 
   ll_pen = decodeBinary(ll_pen_binary)
-  if (anistrop) {
-    checkmate::assertNumeric(ll_pen, len = 1L, any.missing = FALSE)
-  } else {
+  if (simple) {
     checkmate::assertList(ll_pen)
+  } else {
+    if (anistrop) {
+      checkmate::assertNumeric(ll_pen, len = 1L, any.missing = FALSE)
+    } else {
+      checkmate::assertList(ll_pen)
+    }
   }
 
-  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
-  cm$updatePenalty(ll_pen)
+  cm = get(model_symbol, envir = parent.frame())
+  cm$updatePenalty(ll_pen, simple = simple, update_random_intercept = update_random_intercept)
+
+  #base::assign(x = model_symbol, value = cm, envir = parent.frame())
   return(cm)
 }
 
@@ -105,7 +118,7 @@ updateClientPenalty = function(model_symbol, ll_pen_binary, anistrop = TRUE) {
 #' @export
 getBlHyperpars = function(model_symbol) {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
-  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  cm = get(model_symbol, envir = parent.frame())
   return(lapply(cm$bls, function(bl) bl$getHyperpars()))
 }
 
@@ -117,8 +130,10 @@ getBlHyperpars = function(model_symbol) {
 #' @export
 initSiteConstant = function(model_symbol, init) {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
-  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  cm = get(model_symbol, envir = parent.frame())
   cm$initConstantModel(init)
+
+  #base::assign(x = model_symbol, value = cm, envir = parent.frame())
   return(cm)
 }
 
@@ -129,7 +144,7 @@ initSiteConstant = function(model_symbol, init) {
 #' @export
 getOptimalConstant = function(model_symbol) {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
-  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  cm = get(model_symbol, envir = parent.frame())
   return(cm$getLossOptimalConstant())
 }
 
@@ -146,13 +161,14 @@ updateClientBaselearner = function(model_symbol, blname, par_binary = NULL) {
   checkmate::assertCharacter(blname, len = 1L, any.missing = FALSE)
   checkmate::assertCharacter(par_binary, len = 1L, any.missing = FALSE, null.ok = TRUE)
 
-  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  cm = get(model_symbol, envir = parent.frame())
 
   if (is.null(par_binary))
     cm$update(blname)
   else
     cm$updateCWBParts(blname, par_binary = par_binary)
 
+  #base::assign(x = model_symbol, value = cm, envir = parent.frame())
   return(cm)
 }
 
@@ -171,7 +187,7 @@ getClientInit = function(symbol, fn_binary) {
   feature_names = decodeBinary(fn_binary)
   checkmate::assertCharacter(feature_names, any.missing = FALSE)
 
-  dat = eval(parse(text = symbol), envir = .GlobalEnv)
+  dat = eval(parse(text = symbol), envir = parent.frame())
   ll_out = lapply(feature_names, function(ff) {
     if (is.numeric(dat[[ff]])) {
       return(list(class = "numeric", min = min(dat[[ff]]), max = max(dat[[ff]])))
@@ -200,7 +216,7 @@ getClientInit = function(symbol, fn_binary) {
 #' @export
 getClientXtX = function(model_symbol = "cwb") {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
-  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  cm = get(model_symbol, envir = parent.frame())
   return(cm$getXtX())
 }
 
@@ -211,7 +227,7 @@ getClientXtX = function(model_symbol = "cwb") {
 #' @export
 getClientXty = function(model_symbol = "cwb") {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
-  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  cm = get(model_symbol, envir = parent.frame())
   return(cm$getXty())
 }
 
@@ -227,7 +243,7 @@ getClientSSE = function(model_symbol = "cwb", par_list_binary = NULL) {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
   checkmate::assertCharacter(par_list_binary, len = 1L, null.ok = TRUE)
 
-  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  cm = get(model_symbol, envir = parent.frame())
 
   return(cm$getSSE(par_list_binary = par_list_binary))
 }
@@ -240,7 +256,7 @@ getClientSSE = function(model_symbol = "cwb", par_list_binary = NULL) {
 getClientTrainValObs = function(model_symbol = "cwb") {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
 
-  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  cm = get(model_symbol, envir = parent.frame())
   return(cm$getTrainValObs())
 }
 
@@ -252,7 +268,7 @@ getClientTrainValObs = function(model_symbol = "cwb") {
 getClientModelCoefficients = function(model_symbol = "cwb") {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
 
-  cm = eval(parse(text = model_symbol), envir = .GlobalEnv)
+  cm = get(model_symbol, envir = parent.frame())
   return(cm$getBlParams())
 }
 

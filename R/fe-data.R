@@ -84,7 +84,11 @@ siteFEDataNum = function(cwb, feature, npoints = 100L) {
   colnames(ndat) = feature
 
   df_fe = do.call(rbind, lapply(ss, function(s) {
-    pred = bl$predictNewdata(ndat, par = coefs[[s]])
+    if (is.null(coefs[[s]])) {
+      pred = 0
+    } else {
+      pred = bl$predictNewdata(ndat, par = coefs[[s]])
+    }
     out = data.frame(val = ndat[[feature]], pred = pred, server = s)
     return(out)
   }))

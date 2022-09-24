@@ -6,7 +6,7 @@ dsNaRm = function(symbol) {
   checkmate::assertCharacter(symbol, len = 1L, any.missing = FALSE)
   checkSymbol(symbol)
 
-  x = eval(parse(text = symbol), envir = .GlobalEnv)
+  x = eval(parse(text = symbol), envir = parent.frame())
   return(stats::na.omit(x))
 }
 
@@ -16,10 +16,10 @@ dsNaRm = function(symbol) {
 #' @export
 checkSymbol = function(symbol) {
   checkmate::assertCharacter(symbol, len = 1L, any.missing = FALSE)
-  fss = ls(envir = .GlobalEnv)
-  e = try(eval(parse(text = symbol), envir = .GlobalEnv), silent = TRUE)
+  fss = ls(envir = parent.frame())
+  e = try(eval(parse(text = symbol), envir = parent.frame()), silent = TRUE)
   if (inherits(e, "try-error"))
-    stop("Cannot find symbol ", symbol, " in .GlobalEnv")
+    stop("Cannot find symbol ", symbol, " in parent.frame()")
 
   return(NULL)
 }
@@ -35,7 +35,7 @@ getClientTaskType = function(symbol, target) {
   checkmate::assertCharacter(target, len = 1L, any.missing = FALSE)
   checkSymbol(symbol)
 
-  x = eval(parse(text = symbol), envir = .GlobalEnv)[[target]]
+  x = eval(parse(text = symbol), envir = parent.frame())[[target]]
 
   return(getTaskType(x))
 }
@@ -46,8 +46,11 @@ getClientTaskType = function(symbol, target) {
 checkConnection = function(connections) {
   checkmate::assertList(connections)
   if (length(connections) == 0)
-    stop("connections must contain at least one element of class `OpalConnection` (see `?DSI::newDSLoginBuilder`).")
-  nuisance = lapply(connections, checkmate::assertClass, classes = "OpalConnection")
+    stop("connections must contain at least one element of class `OpalConnection` or `DSLiteConnection` (see `?DSI::newDSLoginBuilder`).")
+  nuisance = lapply(connections, function (conn) {
+    if (! class(conn) %in% c("OpalConnection", "DSLiteConnection"))
+      stop("Assertion on 'connections[i]' failed: Must inherit from class 'OpalConnection' or 'DSLiteConnection'")
+  })
 }
 
 #' @title Get number of rows of client data
@@ -58,7 +61,7 @@ getClientNrow = function(symbol) {
   checkmate::assertCharacter(symbol, len = 1L, any.missing = FALSE)
   checkSymbol(symbol)
 
-  dat = eval(parse(text = symbol), envir = .GlobalEnv)
+  dat = eval(parse(text = symbol), envir = parent.frame())
   checkmate::assertDataFrame(dat)
   n = nrow(dat)
 

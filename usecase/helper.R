@@ -4,7 +4,9 @@
 #' @param add_id (`logical(1L)`) Add a column with ids.
 #' @param rm_pcols (`logical(1L)`) Remove problematic columns num, thal, ca, slope, fbs, and chol.
 #' @param add_sim_col (`logical(1L)`) Add a column with random noise.
-readData = function(file, add_source = FALSE, add_id = FALSE, rm_pcols = TRUE, add_sim_col = FALSE) {
+#' @param process (`logical(1L)`) Remove 'suspicious' data.
+readData = function(file, add_source = FALSE, add_id = FALSE, rm_pcols = TRUE, add_sim_col = FALSE,
+                    process = TRUE) {
   if (grepl("reprocessed", file))
     tmp = read.csv(file, sep = " ", header = FALSE, na.strings = c("?", "-9", "-9.0"))
   else
@@ -48,7 +50,213 @@ readData = function(file, add_source = FALSE, add_id = FALSE, rm_pcols = TRUE, a
     xn[! idx_yes] = head(x, sum(! idx_yes))
     tmp$simcol = xn
   }
+
+  if (process) {
+    idx_remove_trestpbs = tmp$trestbps != 0
+    tmp = tmp[idx_remove_trestpbs, ]
+  }
+
   return(tmp)
 }
+
+fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, dat, add_effects = FALSE)  {
+  cboost_names = mod_compboost$getBaselearnerNames()
+
+  fnum = is.numeric(dat[[feature]])
+  if (site || add_effects) {
+    if (fnum) {
+      pred = siteFEDataNum(mod_dsCWB, feature)
+    } else {
+      pred = siteFEDataCat(mod_dsCWB, feature)
+    }
+    pred$method = "dsCWB"
+    dnew = pred[, c(feature, "server")]
+    names(dnew)[2] = "source"
+    xnew = suppressWarnings(mod_compboost$prepareData(dnew))
+
+    bln = cboost_names[grep(feature, cboost_names)]
+    bln = bln[grepl("_tensor", bln)]
+    pred_compboost = try({
+      y_compboost = mod_compboost$model$predictFactoryNewData(bln, xnew)
+      #if (inherits(y_compboost, "try-error")) y_compboost = 0
+      if (fnum) {
+        x = xnew[[feature]]$getData()
+      } else {
+        x = xnew[[1]]$getRawData()
+      }
+      s = xnew[["source"]]$getRawData()
+      pred_compboost = data.frame(x = x, y = y_compboost, server = s, method = "compboost")
+      names(pred_compboost) = names(pred)
+
+      pred_compboost
+    }, silent = TRUE)
+    if (inherits(pred_compboost, "try-error")) {
+      pred_compboost = pred
+      pred_compboost$pred = 0
+      pred_compboost$method = "compboost"
+    }
+
+    # FIXME FOR CATEGORICAL FEATURES
+    pred_mgcv = getMGCVPE(mod_mgcv, feature = feature, site = TRUE)
+    names(pred_mgcv) = names(pred_compboost)
+
+    #xmgcv = sapply(pe_mgcv, function(x) x$xlab)
+    #ymgcv = sapply(pe_mgcv, function(x) x$ylab)
+    #i = which(grepl(":", ymgcv) & grepl(feature, xmgcv))
+    #if (length(i) == 0) {
+      #pred_mgcv = pred_compboost
+      #pred_mgcv$pred = 0
+      #pred_mgcv$method = "mgcv"
+    #} else {
+      #pe = pe_mgcv[i]
+      #pred_mgcv = do.call(rbind, lapply(pe, function(p) {
+        #s = strsplit(p$ylab, ":src")[[1]][2]
+        #data.frame(x = p$x, y = p$fit, server = s, method = "mgcv")
+      #}))
+      #names(pred_mgcv) = names(pred)
+    #}
+
+    pred = rbind(pred, pred_compboost, pred_mgcv)
+    if (add_effects) psite = pred
+
+    if (! add_effects) {
+      gg = ggplot(pred, aes_string(x = feature, y = "pred", color = "method", linetype = "method")) +
+        geom_line() +
+        facet_wrap(~ server, ncol = 2)
+    }
+
+  }
+  if ((! site) || add_effects) {
+    if (fnum) {
+      pred = sharedFEDataNum(mod_dsCWB, feature)
+    } else {
+      pred = sharedFEDataCat(mod_dsCWB, feature)
+    }
+    pred$method = "dsCWB"
+    xnew = suppressWarnings(mod_compboost$prepareData(pred[, feature, drop = FALSE]))
+
+    pred_compboost = try({
+      bln = cboost_names[grep(feature, cboost_names)]
+      bln = bln[! grepl("_tensor", bln)]
+      y_compboost = mod_compboost$model$predictFactoryNewData(bln, xnew)
+      if (fnum) {
+        x = xnew[[1]]$getData()
+      } else {
+        x = xnew[[1]]$getRawData()
+      }
+      pred_compboost = data.frame(x = x, y = y_compboost, method = "compboost")
+      names(pred_compboost) = names(pred)
+
+      pred_compboost
+    }, silent = TRUE)
+
+    if (inherits(pred_compboost, "try-error")) {
+      pred_compboost = pred
+      pred_compboost$pred = 0
+      pred_compboost$method = "compboost"
+    }
+
+
+    # FIXME FOR CATEGORICAL FEATURES
+    pred_mgcv = getMGCVPE(mod_mgcv, feature = feature, FALSE)
+    names(pred_mgcv) = names(pred_compboost)
+
+    #xmgcv = sapply(pe_mgcv, function(x) x$xlab)
+    #ymgcv = sapply(pe_mgcv, function(x) x$ylab)
+    #idx_sh_eff = which((! grepl(":", ymgcv)) & grepl(feature, xmgcv))
+
+    #if (length(idx_sh_eff) == 0) {
+      #pred_mgcv = pred_compboost
+      #pred_mgcv$pred = 0
+      #pred_mgcv$method = "mgcv"
+    #} else {
+      #pe = pe_mgcv[[idx_sh_eff]]
+      #pred_mgcv = data.frame(x = pe$x, y = pe$fit, method = "mgcv")
+      #names(pred_mgcv) = names(pred)
+    #}
+
+    pred = rbind(pred, pred_compboost, pred_mgcv)
+
+    if (! add_effects) {
+      gg = ggplot(pred, aes_string(x = feature, y = "pred", color = "method", linetype = "method")) +
+      geom_line()
+    }
+
+    if (add_effects) pshared = pred
+  }
+  if (add_effects) {
+    psite_cwb = psite[psite$method != "mgcv", ]
+    pshared_cwb = pshared[pshared$method != "mgcv", ]
+
+    psi_mgcv = psite[psite$method == "mgcv", ]
+    psh_mgcv = pshared[pshared$method == "mgcv", ]
+
+    for (s in unique(psite$server)) {
+      psite_cwb$pred[psite_cwb$server == s] = psite_cwb$pred[psite_cwb$server == s] + pshared_cwb$pred
+    }
+    psi_mgcv$pred = psi_mgcv$pred + psh_mgcv$pred
+
+    psite = rbind(psite_cwb, psi_mgcv)
+
+    gg = ggplot(psite, aes_string(x = feature, y = "pred", color = "method", linetype = "method")) +
+      geom_line() +
+      facet_wrap(~ server, ncol = 2)
+  }
+  return(gg)
+}
+
+mytheme = function(base_size = 14) {
+  theme_bw(base_size = base_size) %+replace%
+    theme(
+      plot.title = element_text(size = rel(1), face = "bold", margin = margin(0,0,5,0), hjust = 0),
+      panel.grid.minor = element_blank(),
+      panel.border = element_blank(),
+      axis.title = element_text(size = rel(0.85), face = "bold"),
+      axis.text = element_text(size = rel(0.70), face = "bold"),
+      axis.line = element_line(color = "black", arrow = arrow(length = unit(0.3, "lines"), type = "closed")),
+      legend.title = element_text(size = rel(0.85), face = "bold"),
+      legend.text = element_text(size = rel(0.70), face = "bold"),
+      legend.key = element_rect(fill = "transparent", colour = NA),
+      legend.key.size = unit(1.5, "lines"),
+      legend.background = element_rect(fill = "transparent", colour = NA),
+      strip.background = element_rect(fill = "#17252D", color = "#17252D"),
+      strip.text = element_text(size = rel(0.85), face = "bold", color = "white", margin = margin(5,0,5,0))
+    )
+}
+
+getMGCVPE = function(mod_mgcv, feature, site = TRUE, bpattern = NULL, dat = NULL) {
+  cmgcv = coef(mod_mgcv)
+  if (is.null(dat)) {
+    X = model.matrix(mod_mgcv)
+  } else {
+
+  }
+  cnames = names(cmgcv)
+  if (is.null(bpattern)) {
+    if (site) {
+      bpattern = "ti[()]"
+    } else {
+      bpattern = "s[()]"
+    }
+  }
+  fidx = which(grepl(feature, cnames) & grepl(bpattern, cnames))
+  if (length(fidx) == 0) {
+    pe = 0
+  } else {
+    pe = X[, fidx] %*% cmgcv[fidx]
+  }
+  if (site) {
+    return(data.frame(x = mod_mgcv$model[[feature]], pred = pe,
+      server = mod_mgcv$model[["src"]], method = "mgcv"))
+  } else {
+    return(data.frame(x = mod_mgcv$model[[feature]], pred = pe, method = "mgcv"))
+  }
+}
+
+fVizCategorical = function(feature, mod_dsCWB, mod_compboost, mod_mgcv) {
+  cds = mod_dsCWB$coef
+
+}
+
 
 
