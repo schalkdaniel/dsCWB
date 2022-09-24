@@ -6,7 +6,6 @@
 
 library(ggplot2)
 library(patchwork)
-source(here::here("usecase/helper.R"))
 
 USE_REAL_TEST_ENV = FALSE
 GGSAVE = TRUE
@@ -121,6 +120,8 @@ if (FALSE) {
     ylab("Risk") +
     xlab("Iteration")
 
+  gg_risk
+
   if (GGSAVE) {
     ggsave(gg_risk, filename = here::here("usecase/gg-risk.pdf"), width = 13,
       height = 6, units = "cm")
@@ -152,6 +153,8 @@ if (FALSE) {
 
   gg_traces_vip = gridExtra::grid.arrange(gg_traces_effects, gg_vip,
     layout_matrix = cbind(1, 1, 2))
+
+  gg_traces_vip
 
   if (GGSAVE) {
     ggsave(gg_traces_vip, filename = here::here("usecase/gg-traces-vip.pdf"),
@@ -187,19 +190,20 @@ if (FALSE) {
     ggtitle("Shared + site effects") +
     theme(legend.title = element_blank())
 
-  gg_oldpeak = gridExtra::grid.arrange(gg_oldpeak_shared, gg_oldpeak_site,
-    layout_matrix = cbind(1, 2))
+#  gg_oldpeak = gridExtra::grid.arrange(gg_oldpeak_shared, gg_oldpeak_site,
+#    layout_matrix = cbind(1, 2))
+#
+#  if (GGSAVE) {
+#    ggsave(gg_oldpeak, filename = here::here("usecase/gg-oldpeak.pdf"),
+#      width = 25, height = 8, units = "cm")
+#  }
 
-  if (GGSAVE) {
-    ggsave(gg_oldpeak, filename = here::here("usecase/gg-oldpeak.pdf"),
-      width = 25, height = 8, units = "cm")
-  }
-
-  library(patchwork)
   gg_oldpeak_site2 = gg_oldpeak_site + gg_oldpeak_agg & theme(legend.position = "bottom")
   gg_oldpeak_site2 = gg_oldpeak_site2 + plot_layout(guides = "collect")
 
   gg_oldpeak2 = gg_oldpeak_shared + gg_oldpeak_site2 + plot_layout(widths = c(1, 2))
+  gg_oldpeak2
+
   if (GGSAVE) {
     ggsave(gg_oldpeak2, filename = here::here("usecase/gg-oldpeak2.pdf"),
       width = 25, height = 8, units = "cm")
@@ -232,6 +236,9 @@ if (FALSE) {
 ## PREPARE DATA
 ## ========================================================================== ##
 
+## Load again, preparing the server is removing all custom functions.
+source(here::here("usecase/helper.R"))
+
 ## Get train indices
 ## ===================================================
 # To get comparable results, we train compboost
@@ -261,9 +268,7 @@ df_full$vall = NULL
 ## ========================================================================== ##
 
 # remotes::install_github("schalkdaniel/compboost", ref = "dev")
-#library(compboost)
-
-devtools::load_all("~/repos/compboost")
+library(compboost)
 
 df = 5
 df_random_intercept = 2
@@ -376,7 +381,6 @@ ggright = fViz("age", cwb, cboost, mod_mgcv, site = TRUE, dat = df_full) +
 
 ggleft + ggright
 
-
 fViz("age", cwb, cboost, mod_mgcv, site = FALSE, dat = df_full, add_effects = TRUE) +
   ggtitle("age", "Shared feature effect")
 
@@ -427,6 +431,8 @@ ggs = lapply(fnums, function(fname) {
 })
 gg_all = (ggs[[1]] + ggs[[2]]) / (ggs[[3]] + ggs[[4]]) & theme(legend.position = "bottom")
 gg_all = gg_all + plot_layout(guides = "collect")
+
+gg_all
 
 if (GGSAVE) {
   ggsave(gg_all, filename = here::here("usecase/fe-nums-add-effects.pdf"), width = 22, height = 20, unit = "cm")
