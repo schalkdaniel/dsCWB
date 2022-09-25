@@ -239,35 +239,37 @@ if (FALSE) {
 ## Load again, preparing the server is removing all custom functions.
 source(here::here("usecase/helper.R"))
 
-## Get train indices
-## ===================================================
-# To get comparable results, we train compboost
-# on exact the same samples as the distributed
-# version.
+#  ## Get train indices
+#  ## ===================================================
+#  # To get comparable results, we train compboost
+#  # on exact the same samples as the distributed
+#  # version.
+#
+#  # cms = getDSLiteData(connections, "cm")
+#  # val_idx = lapply(cms, function(cm) cm$getTrainValIndex()$test)
+#  # save(val_idx, file = here::here("usecase/data/val-idx.R"))
+#  load(here::here("usecase/data/val-idx.Rda"))
+#
+#  # mstop = max(cwb$getLog()$iteration)
+#  # save(mstop, file = here::here("usecase/data/mstop.Rda"))
+#  load(here::here("usecase/data/mstop.Rda"))
+#
+#  datasets = list.files(here::here("usecase/data"), full.names = TRUE, pattern = ".data")
+#
+#  ll_dfs = lapply(datasets, readData, add_source = TRUE)
+#  df_full = do.call(rbind, lapply(ll_dfs, function(df) {
+#    s = df$source[1]
+#    idx = val_idx[[s]]
+#    df = na.omit(df)
+#    df$val = FALSE
+#    df$val[idx] = TRUE
+#    return(df)
+#  }))
+#  val_idx = which(df_full$val)
+#  df_full$vall = NULL
 
-# cms = getDSLiteData(connections, "cm")
-# val_idx = lapply(cms, function(cm) cm$getTrainValIndex()$test)
-# save(val_idx, file = here::here("usecase/data/val-idx.R"))
-load(here::here("usecase/data/val-idx.Rda"))
-
-# mstop = max(cwb$getLog()$iteration)
-# save(mstop, file = here::here("usecase/data/mstop.Rda"))
-load(here::here("usecase/data/mstop.Rda"))
-
-datasets = list.files(here::here("usecase/data"), full.names = TRUE, pattern = ".data")
-
-ll_dfs = lapply(datasets, readData, add_source = TRUE)
-df_full = do.call(rbind, lapply(ll_dfs, function(df) {
-  s = df$source[1]
-  idx = val_idx[[s]]
-  df = na.omit(df)
-  df$val = FALSE
-  df$val[idx] = TRUE
-  return(df)
-}))
-val_idx = which(df_full$val)
-df_full$vall = NULL
-
+# save(df_full, file = here::here("usecase/df-full.Rda"))
+load(file = here::here("usecase/df-full.Rda"))
 
 ## TRAIN MODEL
 ## ========================================================================== ##
