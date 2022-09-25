@@ -254,7 +254,7 @@ load(here::here("usecase/data/val-idx.Rda"))
 # save(mstop, file = here::here("usecase/data/mstop.Rda"))
 load(here::here("usecase/data/mstop.Rda"))
 
-datasets = list.files(here::here("usecase/data"), full.names = TRUE)
+datasets = list.files(here::here("usecase/data"), full.names = TRUE, pattern = ".data")
 
 ll_dfs = lapply(datasets, readData, add_source = TRUE)
 df_full = do.call(rbind, lapply(ll_dfs, function(df) {
