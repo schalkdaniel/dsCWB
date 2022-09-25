@@ -248,9 +248,6 @@ source(here::here("usecase/helper.R"))
 #  # cms = getDSLiteData(connections, "cm")
 #  # val_idx = lapply(cms, function(cm) cm$getTrainValIndex()$test)
 #
-#  # mstop = max(cwb$getLog()$iteration)
-#  # save(mstop, file = here::here("usecase/data/mstop.Rda"))
-#
 #  datasets = list.files(here::here("usecase/data"), full.names = TRUE, pattern = ".data")
 #
 #  ll_dfs = lapply(datasets, readData, add_source = TRUE)
@@ -279,7 +276,6 @@ source(here::here("usecase/helper.R"))
 
 load(file = here::here("usecase/data/df-full.Rda"))
 load(file = here::here("usecase/data/val-idx.Rda"))
-load(file = here::here("usecase/data/mstop.Rda"))
 
 df = 5
 df_random_intercept = 2
