@@ -268,8 +268,8 @@ source(here::here("usecase/helper.R"))
 #  val_idx = which(df_full$val)
 #  df_full$vall = NULL
 
-# save(df_full, file = here::here("usecase/df-full.Rda"))
-load(file = here::here("usecase/df-full.Rda"))
+# save(df_full, file = here::here("usecase/data/df-full.Rda"))
+load(file = here::here("usecase/data/df-full.Rda"))
 
 ## TRAIN MODEL
 ## ========================================================================== ##
