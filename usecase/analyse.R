@@ -247,12 +247,9 @@ source(here::here("usecase/helper.R"))
 #
 #  # cms = getDSLiteData(connections, "cm")
 #  # val_idx = lapply(cms, function(cm) cm$getTrainValIndex()$test)
-#  # save(val_idx, file = here::here("usecase/data/val-idx.R"))
-#  load(here::here("usecase/data/val-idx.Rda"))
 #
 #  # mstop = max(cwb$getLog()$iteration)
 #  # save(mstop, file = here::here("usecase/data/mstop.Rda"))
-#  load(here::here("usecase/data/mstop.Rda"))
 #
 #  datasets = list.files(here::here("usecase/data"), full.names = TRUE, pattern = ".data")
 #
@@ -266,16 +263,23 @@ source(here::here("usecase/helper.R"))
 #    return(df)
 #  }))
 #  val_idx = which(df_full$val)
-#  df_full$vall = NULL
+#  df_full$val = NULL
 
 # save(df_full, file = here::here("usecase/data/df-full.Rda"))
-load(file = here::here("usecase/data/df-full.Rda"))
+# save(val_idx, file = here::here("usecase/data/val-idx.Rda"))
 
 ## TRAIN MODEL
 ## ========================================================================== ##
 
 # remotes::install_github("schalkdaniel/compboost", ref = "dev")
 library(compboost)
+
+## Load again, preparing the server is removing all custom functions.
+source(here::here("usecase/helper.R"))
+
+load(file = here::here("usecase/data/df-full.Rda"))
+load(file = here::here("usecase/data/val-idx.Rda"))
+load(file = here::here("usecase/data/mstop.Rda"))
 
 df = 5
 df_random_intercept = 2
@@ -376,6 +380,15 @@ mod_mgcv = gam(fmgcv, family = binomial(), data = df_mgcv)
 ##                                                                            ##
 ################################################################################
 
+source(here::here("usecase/helper.R"))
+
+library(ggplot2)
+library(patchwork)
+
+# Without dsCWB:
+fViz("oldpeak", mod_compboost = cboost, mod_mgcv = mod_mgcv, add_effects = TRUE, dat = df_full)
+fViz("oldpeak", mod_compboost = cboost, mod_mgcv = mod_mgcv, site = FALSE, dat = df_full)
+fViz("oldpeak", mod_compboost = cboost, mod_mgcv = mod_mgcv, site = TRUE, dat = df_full)
 
 ## Example for age:
 ## ================================================

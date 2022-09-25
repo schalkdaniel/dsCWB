@@ -59,16 +59,32 @@ readData = function(file, add_source = FALSE, add_id = FALSE, rm_pcols = TRUE, a
   return(tmp)
 }
 
-fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, dat, add_effects = FALSE)  {
+peSkeleton = function(dat, feature, servers = NULL, npoints = 100L) {
+  x = dat[[feature]]
+  d0 = data.frame(val = seq(min(x), max(x), length.out = npoints), pred = NA)
+  names(d0) = c(feature, "pred")
+  if (! is.null(servers)) {
+    d0 = do.call(rbind, lapply(servers, function(s) cbind(d0, server = s)))
+  }
+  return(d0)
+}
+
+fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, dat, add_effects = FALSE, svar = "source")  {
   cboost_names = mod_compboost$getBaselearnerNames()
 
   fnum = is.numeric(dat[[feature]])
   if (site || add_effects) {
-    if (fnum) {
-      pred = siteFEDataNum(mod_dsCWB, feature)
+    if (missing(mod_dsCWB)) {
+      d0 = mod_compboost$data
+      pred = peSkeleton(d0, feature, unique(d0[[svar]]))
     } else {
-      pred = siteFEDataCat(mod_dsCWB, feature)
+      if (fnum) {
+        pred = siteFEDataNum(mod_dsCWB, feature)
+      } else {
+        pred = siteFEDataCat(mod_dsCWB, feature)
+      }
     }
+
     pred$method = "dsCWB"
     dnew = pred[, c(feature, "server")]
     names(dnew)[2] = "source"
@@ -86,6 +102,7 @@ fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, dat, 
       }
       s = xnew[["source"]]$getRawData()
       pred_compboost = data.frame(x = x, y = y_compboost, server = s, method = "compboost")
+
       names(pred_compboost) = names(pred)
 
       pred_compboost
@@ -100,23 +117,7 @@ fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, dat, 
     pred_mgcv = getMGCVPE(mod_mgcv, feature = feature, site = TRUE)
     names(pred_mgcv) = names(pred_compboost)
 
-    #xmgcv = sapply(pe_mgcv, function(x) x$xlab)
-    #ymgcv = sapply(pe_mgcv, function(x) x$ylab)
-    #i = which(grepl(":", ymgcv) & grepl(feature, xmgcv))
-    #if (length(i) == 0) {
-      #pred_mgcv = pred_compboost
-      #pred_mgcv$pred = 0
-      #pred_mgcv$method = "mgcv"
-    #} else {
-      #pe = pe_mgcv[i]
-      #pred_mgcv = do.call(rbind, lapply(pe, function(p) {
-        #s = strsplit(p$ylab, ":src")[[1]][2]
-        #data.frame(x = p$x, y = p$fit, server = s, method = "mgcv")
-      #}))
-      #names(pred_mgcv) = names(pred)
-    #}
-
-    pred = rbind(pred, pred_compboost, pred_mgcv)
+    pred = na.omit(rbind(pred, pred_compboost, pred_mgcv))
     if (add_effects) psite = pred
 
     if (! add_effects) {
@@ -126,11 +127,17 @@ fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, dat, 
     }
 
   }
+
   if ((! site) || add_effects) {
-    if (fnum) {
-      pred = sharedFEDataNum(mod_dsCWB, feature)
+    if (missing(mod_dsCWB)) {
+      d0 = mod_compboost$data
+      pred = peSkeleton(d0, feature)
     } else {
-      pred = sharedFEDataCat(mod_dsCWB, feature)
+      if (fnum) {
+        pred = sharedFEDataNum(mod_dsCWB, feature)
+      } else {
+        pred = sharedFEDataCat(mod_dsCWB, feature)
+      }
     }
     pred$method = "dsCWB"
     xnew = suppressWarnings(mod_compboost$prepareData(pred[, feature, drop = FALSE]))
@@ -156,26 +163,11 @@ fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, dat, 
       pred_compboost$method = "compboost"
     }
 
-
     # FIXME FOR CATEGORICAL FEATURES
     pred_mgcv = getMGCVPE(mod_mgcv, feature = feature, FALSE)
     names(pred_mgcv) = names(pred_compboost)
 
-    #xmgcv = sapply(pe_mgcv, function(x) x$xlab)
-    #ymgcv = sapply(pe_mgcv, function(x) x$ylab)
-    #idx_sh_eff = which((! grepl(":", ymgcv)) & grepl(feature, xmgcv))
-
-    #if (length(idx_sh_eff) == 0) {
-      #pred_mgcv = pred_compboost
-      #pred_mgcv$pred = 0
-      #pred_mgcv$method = "mgcv"
-    #} else {
-      #pe = pe_mgcv[[idx_sh_eff]]
-      #pred_mgcv = data.frame(x = pe$x, y = pe$fit, method = "mgcv")
-      #names(pred_mgcv) = names(pred)
-    #}
-
-    pred = rbind(pred, pred_compboost, pred_mgcv)
+    pred = na.omit(rbind(pred, pred_compboost, pred_mgcv))
 
     if (! add_effects) {
       gg = ggplot(pred, aes_string(x = feature, y = "pred", color = "method", linetype = "method")) +
