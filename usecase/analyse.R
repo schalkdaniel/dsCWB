@@ -245,9 +245,14 @@ source(here::here("usecase/helper.R"))
 # on exact the same samples as the distributed
 # version.
 
-cms = getDSLiteData(connections, "cm")
-val_idx = lapply(cms, function(cm) cm$getTrainValIndex()$test)
-mstop = max(cwb$getLog()$iteration)
+# cms = getDSLiteData(connections, "cm")
+# val_idx = lapply(cms, function(cm) cm$getTrainValIndex()$test)
+# save(val_idx, file = here::here("usecase/data/val-idx.R"))
+load(here::here("usecase/data/val-idx.Rda"))
+
+# mstop = max(cwb$getLog()$iteration)
+# save(mstop, file = here::here("usecase/data/mstop.Rda"))
+load(here::here("usecase/data/mstop.Rda"))
 
 datasets = list.files(here::here("usecase/data"), full.names = TRUE)
 
