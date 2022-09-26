@@ -59,17 +59,16 @@ readData = function(file, add_source = FALSE, add_id = FALSE, rm_pcols = TRUE, a
   return(tmp)
 }
 
-peSkeleton = function(dat, feature, servers = NULL, npoints = 100L) {
-  x = dat[[feature]]
-  d0 = data.frame(val = seq(min(x), max(x), length.out = npoints), pred = NA)
-  names(d0) = c(feature, "pred")
-  if (! is.null(servers)) {
-    d0 = do.call(rbind, lapply(servers, function(s) cbind(d0, server = s)))
-  }
-  return(d0)
-}
-
+#' Create a data skeleton with varying `feature` values `x` and constant values for all other
+#' variables in `dat` (numeric = mean, ordingal = mode).
+#' @param x (`vector()`) Varying values.
+#' @param dat (`data.frame()`) Data frame with all variables (used to calculate constants).
+#' @param feature (`character(1L)`) Name of the varying variable.
 createDFSkeleton = function(x, dat, feature) {
+  checkmate::assertVector(x)
+  checkmate::assertDataFrame(dat)
+  checkmate::assertChoice(feature, colnames(dat))
+
   n = length(x)
   idx = seq_len(n)
   d0 = do.call(data.frame, lapply(dat, function(ff) {
@@ -85,7 +84,20 @@ createDFSkeleton = function(x, dat, feature) {
   return(d0)
 }
 
+#' Create a data.frame with partial effects of a `gam` model produced by mgcv. Column
+#' names are `feature`, pred, method (= "mgcv"), and if `! is.null(sitevar)` server.
+#' @param mod_mgcv (`gam`) GAM model from `mgcv`.
+#' @param feature (`character(1L)`) Name of the varying variable.
+#' @param sitevar (`character(1L)`) Name of the variable containing the site.
+#' @param bpattern (`character(1L)`) Regexp to filter for a specific base learner.
+#' @param x (`vector()`) Varying values.
 getMGCVPE = function(mod_mgcv, feature, sitevar = NULL, bpattern = NULL, x = NULL) {
+  checkmate::assertClass(mod_mgcv, "gam")
+  checkmate::assertChoice(feature, colnames(mod_mgcv$model))
+  checkmate::assertChoice(sitevar, colnames(mod_mgcv$model), null.ok = TRUE)
+  checkmate::assertCharacter(bpattern, len = 1L, null.ok = TRUE)
+  checkmate::assertVector(x, null.ok = TRUE)
+
   if (is.null(x)) {
     d0 = mod_mgcv$model
   } else {
@@ -121,7 +133,20 @@ getMGCVPE = function(mod_mgcv, feature, sitevar = NULL, bpattern = NULL, x = NUL
   return(pedf)
 }
 
+#' Create a data.frame with partial effects of a CWB model produced by compboost. Column
+#' names are `feature`, pred, method (= "compboost"), and if `! is.null(sitevar)` server.
+#' @param mod_compboost (`Compboost`) CWB model from `compboost`.
+#' @param feature (`character(1L)`) Name of the varying variable.
+#' @param sitevar (`character(1L)`) Name of the variable containing the site.
+#' @param bpattern (`character(1L)`) Regexp to filter for a specific base learner.
+#' @param x (`vector()`) Varying values.
 getCompboostPE = function(mod_compboost, feature, sitevar = NULL, bpattern = NULL, x = NULL) {
+  checkmate::assertR6(mod_compboost, "Compboost")
+  checkmate::assertChoice(feature, colnames(mod_compboost$data))
+  checkmate::assertChoice(sitevar, colnames(mod_compboost$data), null.ok = TRUE)
+  checkmate::assertCharacter(bpattern, len = 1L, null.ok = TRUE)
+  checkmate::assertVector(x, null.ok = TRUE)
+
   xnew = x
   if (is.null(x)) {
     xnew  = mod_compboost$data[[feature]]
@@ -164,12 +189,26 @@ getCompboostPE = function(mod_compboost, feature, sitevar = NULL, bpattern = NUL
   return(pedf)
 }
 
-
+#### TODO
 getDistCWBPE = function(mod_dsCWB, feature, sitevar = NULL, bpattern = NULL, x = NULL) {
   getCompboostPE(mod_dsCWB, feature, sitevar, bpattern, x)
 }
 
+#' Create a data.frame with partial effects of a CWB model produced by compboost. Column
+#' names are `feature`, pred, method (= "compboost"), and if `! is.null(sitevar)` server.
+#' @param mod_compboost (`Compboost`) CWB model from `compboost`.
+#' @param feature (`character(1L)`) Name of the varying variable.
+#' @param sitevar (`character(1L)`) Name of the variable containing the site.
+#' @param bpattern (`character(1L)`) Regexp to filter for a specific base learner.
+#' @param x (`vector()`) Varying values.
 addEffects = function(dshared, dsites, key, keys, name_add_val = "pred") {
+  checkmate::assertDataFrame(dshared)
+  checkmate::assertChoice(key, colnames(dsites))
+  checkmate::assertCharacter(keys, min.len = 1L)
+  checkmate::assertDataFrame(dsites, nrows = nrow(dshared) * length(keys))
+  if (! is.factor(dsites[[key]])) dsites[[key]] = as.factor(dsites[[key]])
+  nuisance = lapply(keys, checkmate::assertChoice, choices = levels(dsites[[key]]))
+
   dagg = do.call(rbind, lapply(keys, function(k) {
     dsub = dsites[dsites[[key]] == k, ]
     dsub[[name_add_val]] = dsub[[name_add_val]] + dshared[[name_add_val]]
@@ -178,7 +217,25 @@ addEffects = function(dshared, dsites, key, keys, name_add_val = "pred") {
   return(dagg)
 }
 
+#' Create a data.frame with partial effects for the three methods "distributed CWB" (`dsCWB`),
+#' "CWB" (`compboost`), and "GAMM" (`mgcv`) . Names are `feature`, pred, method, and
+#' if `! is.null(sitevar)` server.
+#' @param feature (`character(1L)`) Name of the varying variable.
+#' @param mod_dsCWB (`dsCWB`) Distributed CWB model from `dsCWB`.
+#' @param mod_compboost (`Compboost`) CWB model from `compboost`.
+#' @param mod_mgcv (`gam`) GAM model from `mgcv`.
+#' @param site (`logical(1L)`) Indicator whether the PEs are site specific or not.
+#' @param add_effects (`logical(1L)`) Should shared and site-specific effects added up to the overall effect?
+#' @param num_points (`integer(1L)`) Number of points used to create the grid for numerical features.
 fVizData = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, add_effects = FALSE, num_points = 100L) {
+  checkmate::assertChoice(feature, colnames(mod_mgcv$model))
+  if (! missing(mod_dsCWB)) checkmate::assertR6(mod_dsCWB, "dsCWB")
+  checkmate::assertR6(mod_compboost, "Compboost")
+  checkmate::assertClass(mod_mgcv, "gam")
+  checkmate::assertLogical(site, len = 1L)
+  checkmate::assertLogical(add_effects, len = 1L)
+  checkmate::assertCount(num_points)
+
   dat = mod_mgcv$model
   x = dat[[feature]]
   if (is.numeric(x)) {
@@ -213,8 +270,27 @@ fVizData = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, a
   return(rbind(pe_mgcv, pe_compboost))
 }
 
+#' Create a plot for the partial effects for the three methods "distributed CWB" (`dsCWB`),
+#' "CWB" (`compboost`), and "GAMM" (`mgcv`). A ggplot is returned, if `plot = FALSE` the
+#' partial effects data (see `fVizData`) are returned.
+#' @param feature (`character(1L)`) Name of the varying variable.
+#' @param mod_dsCWB (`dsCWB`) Distributed CWB model from `dsCWB`.
+#' @param mod_compboost (`Compboost`) CWB model from `compboost`.
+#' @param mod_mgcv (`gam`) GAM model from `mgcv`.
+#' @param site (`logical(1L)`) Indicator whether the PEs are site specific or not.
+#' @param add_effects (`logical(1L)`) Should shared and site-specific effects added up to the overall effect?
+#' @param num_points (`integer(1L)`) Number of points used to create the grid for numerical features.
 fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, add_effects = FALSE,
   num_points = 100L, plot = TRUE)  {
+
+  checkmate::assertChoice(feature, colnames(mod_mgcv$model))
+  if (! missing(mod_dsCWB)) checkmate::assertR6(mod_dsCWB, "dsCWB")
+  checkmate::assertR6(mod_compboost, "Compboost")
+  checkmate::assertClass(mod_mgcv, "gam")
+  checkmate::assertLogical(site, len = 1L)
+  checkmate::assertLogical(add_effects, len = 1L)
+  checkmate::assertCount(num_points)
+  checkmate::assertLogical(plot, len = 1L)
 
   pe_data = fVizData(feature, mod_dsCWB, mod_compboost, mod_mgcv, site, add_effects, num_points)
 
@@ -242,136 +318,6 @@ fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, add_e
   return(gg)
 }
 
-fVizOld = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, dat, add_effects = FALSE, svar = "source")  {
-
-
-  cboost_names = mod_compboost$getBaselearnerNames()
-
-  fnum = is.numeric(dat[[feature]])
-  if (site || add_effects) {
-    if (missing(mod_dsCWB)) {
-      d0 = mod_compboost$data
-      pred = peSkeleton(d0, feature, unique(d0[[svar]]))
-    } else {
-      if (fnum) {
-        pred = siteFEDataNum(mod_dsCWB, feature)
-      } else {
-        pred = siteFEDataCat(mod_dsCWB, feature)
-      }
-    }
-
-    pred$method = "dsCWB"
-    dnew = pred[, c(feature, "server")]
-    names(dnew)[2] = "source"
-    xnew = suppressWarnings(mod_compboost$prepareData(dnew))
-
-    bln = cboost_names[grep(feature, cboost_names)]
-    bln = bln[grepl("_tensor", bln)]
-    pred_compboost = try({
-      y_compboost = mod_compboost$model$predictFactoryNewData(bln, xnew)
-      #if (inherits(y_compboost, "try-error")) y_compboost = 0
-      if (fnum) {
-        x = xnew[[feature]]$getData()
-      } else {
-        x = xnew[[1]]$getRawData()
-      }
-      s = xnew[["source"]]$getRawData()
-      pred_compboost = data.frame(x = x, y = y_compboost, server = s, method = "compboost")
-
-      names(pred_compboost) = names(pred)
-
-      pred_compboost
-    }, silent = TRUE)
-    if (inherits(pred_compboost, "try-error")) {
-      pred_compboost = pred
-      pred_compboost$pred = 0
-      pred_compboost$method = "compboost"
-    }
-
-    # FIXME FOR CATEGORICAL FEATURES
-    pred_mgcv = getMGCVPE(mod_mgcv, feature = feature, site = TRUE)
-    names(pred_mgcv) = names(pred_compboost)
-
-    pred = na.omit(rbind(pred, pred_compboost, pred_mgcv))
-    if (add_effects) psite = pred
-
-    if (! add_effects) {
-      gg = ggplot(pred, aes_string(x = feature, y = "pred", color = "method", linetype = "method")) +
-        geom_line() +
-        facet_wrap(~ server, ncol = 2)
-    }
-
-  }
-
-  if ((! site) || add_effects) {
-    if (missing(mod_dsCWB)) {
-      d0 = mod_compboost$data
-      pred = peSkeleton(d0, feature)
-    } else {
-      if (fnum) {
-        pred = sharedFEDataNum(mod_dsCWB, feature)
-      } else {
-        pred = sharedFEDataCat(mod_dsCWB, feature)
-      }
-    }
-    pred$method = "dsCWB"
-    xnew = suppressWarnings(mod_compboost$prepareData(pred[, feature, drop = FALSE]))
-
-    pred_compboost = try({
-      bln = cboost_names[grep(feature, cboost_names)]
-      bln = bln[! grepl("_tensor", bln)]
-      y_compboost = mod_compboost$model$predictFactoryNewData(bln, xnew)
-      if (fnum) {
-        x = xnew[[1]]$getData()
-      } else {
-        x = xnew[[1]]$getRawData()
-      }
-      pred_compboost = data.frame(x = x, y = y_compboost, method = "compboost")
-      names(pred_compboost) = names(pred)
-
-      pred_compboost
-    }, silent = TRUE)
-
-    if (inherits(pred_compboost, "try-error")) {
-      pred_compboost = pred
-      pred_compboost$pred = 0
-      pred_compboost$method = "compboost"
-    }
-
-    # FIXME FOR CATEGORICAL FEATURES
-    pred_mgcv = getMGCVPE(mod_mgcv, feature = feature, FALSE)
-    names(pred_mgcv) = names(pred_compboost)
-
-    pred = na.omit(rbind(pred, pred_compboost, pred_mgcv))
-
-    if (! add_effects) {
-      gg = ggplot(pred, aes_string(x = feature, y = "pred", color = "method", linetype = "method")) +
-      geom_line()
-    }
-
-    if (add_effects) pshared = pred
-  }
-  if (add_effects) {
-    psite_cwb = psite[psite$method != "mgcv", ]
-    pshared_cwb = pshared[pshared$method != "mgcv", ]
-
-    psi_mgcv = psite[psite$method == "mgcv", ]
-    psh_mgcv = pshared[pshared$method == "mgcv", ]
-
-    for (s in unique(psite$server)) {
-      psite_cwb$pred[psite_cwb$server == s] = psite_cwb$pred[psite_cwb$server == s] + pshared_cwb$pred
-    }
-    psi_mgcv$pred = psi_mgcv$pred + psh_mgcv$pred
-
-    psite = rbind(psite_cwb, psi_mgcv)
-
-    gg = ggplot(psite, aes_string(x = feature, y = "pred", color = "method", linetype = "method")) +
-      geom_line() +
-      facet_wrap(~ server, ncol = 2)
-  }
-  return(gg)
-}
-
 mytheme = function(base_size = 14) {
   theme_bw(base_size = base_size) %+replace%
     theme(
@@ -390,12 +336,3 @@ mytheme = function(base_size = 14) {
       strip.text = element_text(size = rel(0.85), face = "bold", color = "white", margin = margin(5,0,5,0))
     )
 }
-
-
-fVizCategorical = function(feature, mod_dsCWB, mod_compboost, mod_mgcv) {
-  cds = mod_dsCWB$coef
-
-}
-
-
-

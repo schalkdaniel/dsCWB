@@ -237,7 +237,7 @@ if (FALSE) {
 ## ========================================================================== ##
 
 ## Load again, preparing the server is removing all custom functions.
-source(here::here("usecase/helper.R"))
+# source(here::here("usecase/helper.R"))
 
 #  ## Get train indices
 #  ## ===================================================
