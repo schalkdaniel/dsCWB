@@ -69,7 +69,182 @@ peSkeleton = function(dat, feature, servers = NULL, npoints = 100L) {
   return(d0)
 }
 
-fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, dat, add_effects = FALSE, svar = "source")  {
+createDFSkeleton = function(x, dat, feature) {
+  n = length(x)
+  idx = seq_len(n)
+  d0 = do.call(data.frame, lapply(dat, function(ff) {
+    if (is.numeric(ff)) {
+      rep(mean(ff), n)
+    } else {
+      tx = table(ff)
+      max_idx = which.max(tx)
+      rep(names(tx)[max_idx], n)
+    }
+  }))
+  d0[[feature]] = x
+  return(d0)
+}
+
+getMGCVPE = function(mod_mgcv, feature, sitevar = NULL, bpattern = NULL, x = NULL) {
+  if (is.null(x)) {
+    d0 = mod_mgcv$model
+  } else {
+    d0 = createDFSkeleton(x, mod_mgcv$model, feature)
+  }
+  if (! is.null(sitevar)) {
+    snames = unique(mod_mgcv$model[[sitevar]])
+    d0 = do.call(rbind, lapply(snames, function(sn) {
+      d1 = d0
+      d1[[sitevar]] = sn
+      return(d1)
+    }))
+  }
+  p = predict(mod_mgcv, type = "terms", newdata = d0)
+
+  cnames = colnames(p)
+  if (is.null(bpattern)) {
+    if (is.null(sitevar)) {
+      bpattern = "s[(]"
+    } else {
+      bpattern = "ti[(]"
+    }
+  }
+  fidx = which(grepl(feature, cnames) & grepl(bpattern, cnames))
+  if ((! is.numeric(d0[[feature]])) && is.null(sitevar)) fidx = which(cnames == feature)
+  pe = unname(p[, fidx])
+
+  pedf = data.frame(x = d0[[feature]], pred = pe, method = "mgcv")
+  if (! is.null(sitevar)) {
+    pedf$server = d0[[sitevar]]
+  }
+  names(pedf)[1] = feature
+  return(pedf)
+}
+
+getCompboostPE = function(mod_compboost, feature, sitevar = NULL, bpattern = NULL, x = NULL) {
+  xnew = x
+  if (is.null(x)) {
+    xnew  = mod_compboost$data[[feature]]
+  }
+  d0 = data.frame(x = x)
+  names(d0) = feature
+
+  if (! is.null(sitevar)) {
+    snames = unique(mod_compboost$data[[sitevar]])
+    d0 = do.call(rbind, lapply(snames, function(sn) {
+      d1 = d0
+      d1[[sitevar]] = sn
+      return(d1)
+    }))
+  }
+  xnew = suppressWarnings(mod_compboost$prepareData(d0))
+  blnames = mod_compboost$getBaselearnerNames()
+
+  bln = blnames[grep(feature, blnames)]
+  if (is.null(bpattern)) {
+    if (is.null(sitevar)) {
+      bln = bln[! grepl("_tensor", bln)]
+    } else {
+      bln = bln[grepl("_tensor", bln)]
+    }
+  } else {
+    bln = bln[grepl(bpattern, bln)]
+  }
+
+  pe = try(as.vector(mod_compboost$model$predictFactoryNewData(bln, xnew)), silent = TRUE)
+  if (inherits(pe, "try-error")) pe = rep(0, length(x))
+
+
+  pedf = data.frame(x = d0[[feature]], pred = pe, method = "compboost")
+  if (! is.null(sitevar)) {
+    s = xnew[[sitevar]]$getRawData()
+    pedf$server = d0[[sitevar]]
+  }
+  names(pedf)[1] = feature
+  return(pedf)
+}
+
+
+getDistCWBPE = function(mod_dsCWB, feature, sitevar = NULL, bpattern = NULL, x = NULL) {
+  getCompboostPE(mod_dsCWB, feature, sitevar, bpattern, x)
+}
+
+addEffects = function(dshared, dsites, key, keys, name_add_val = "pred") {
+  dagg = do.call(rbind, lapply(keys, function(k) {
+    dsub = dsites[dsites[[key]] == k, ]
+    dsub[[name_add_val]] = dsub[[name_add_val]] + dshared[[name_add_val]]
+    return(dsub)
+  }))
+  return(dagg)
+}
+
+fVizData = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, add_effects = FALSE, num_points = 100L) {
+  dat = mod_mgcv$model
+  x = dat[[feature]]
+  if (is.numeric(x)) {
+    xnew = seq(min(x), max(x), length.out = num_points)
+  } else {
+    xnew = unique(x)
+  }
+  d0 = createDFSkeleton(x, dat, feature)
+
+  svar_mgcv = "src"
+  svar_compboost = "source"
+  if (add_effects) {
+    pe_mgcv_shared = getMGCVPE(mod_mgcv, feature, sitevar = NULL, x = xnew)
+    pe_mgcv_site = getMGCVPE(mod_mgcv, feature, sitevar = svar_mgcv, x = xnew)
+
+    skeys = levels(pe_mgcv_site$server)
+
+    pe_mgcv = addEffects(pe_mgcv_shared, pe_mgcv_site, key = "server", keys = skeys)
+
+    pe_compboost_shared = getCompboostPE(mod_compboost, feature, sitevar = NULL, x = xnew)
+    pe_compboost_site = getCompboostPE(mod_compboost, feature, sitevar = svar_compboost, x = xnew)
+    pe_compboost = addEffects(pe_compboost_shared, pe_compboost_site, key = "server", keys = skeys)
+
+  } else {
+    if (! site) {
+      svar_mgcv = NULL
+      svar_compboost = NULL
+    }
+    pe_mgcv = getMGCVPE(mod_mgcv, feature, sitevar = svar_mgcv, x = xnew)
+    pe_compboost = getCompboostPE(mod_compboost, feature, sitevar = svar_compboost, x = xnew)
+  }
+  return(rbind(pe_mgcv, pe_compboost))
+}
+
+fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, add_effects = FALSE,
+  num_points = 100L, plot = TRUE)  {
+
+  pe_data = fVizData(feature, mod_dsCWB, mod_compboost, mod_mgcv, site, add_effects, num_points)
+
+  if (! plot) return(invisible(pe_data))
+  if (is.numeric(pe_data[[feature]])) {
+    if (site || add_effects) {
+      gg = ggplot(pe_data, aes_string(x = feature, y = "pred", color = "method", linetype = "method")) +
+        geom_line() +
+        facet_wrap(~ server, ncol = 2)
+    } else {
+      gg = ggplot(pe_data, aes_string(x = feature, y = "pred", color = "method", linetype = "method")) +
+        geom_line()
+    }
+  } else {
+    if (site || add_effects) {
+      gg = ggplot(pe_data, aes_string(x = feature, y = "pred", color = "method", shape = "method")) +
+        geom_point(position = position_dodge(0.2)) +
+        facet_wrap(~ server, ncol = 2)
+    } else {
+      gg = ggplot(pe_data, aes_string(x = feature, y = "pred", color = "method", shape = "method")) +
+        geom_point(position = position_dodge(0.2))
+    }
+  }
+  attr(gg, "pe_data") = pe_data
+  return(gg)
+}
+
+fVizOld = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, dat, add_effects = FALSE, svar = "source")  {
+
+
   cboost_names = mod_compboost$getBaselearnerNames()
 
   fnum = is.numeric(dat[[feature]])
@@ -216,34 +391,6 @@ mytheme = function(base_size = 14) {
     )
 }
 
-getMGCVPE = function(mod_mgcv, feature, site = TRUE, bpattern = NULL, dat = NULL) {
-  cmgcv = coef(mod_mgcv)
-  if (is.null(dat)) {
-    X = model.matrix(mod_mgcv)
-  } else {
-
-  }
-  cnames = names(cmgcv)
-  if (is.null(bpattern)) {
-    if (site) {
-      bpattern = "ti[()]"
-    } else {
-      bpattern = "s[()]"
-    }
-  }
-  fidx = which(grepl(feature, cnames) & grepl(bpattern, cnames))
-  if (length(fidx) == 0) {
-    pe = 0
-  } else {
-    pe = X[, fidx] %*% cmgcv[fidx]
-  }
-  if (site) {
-    return(data.frame(x = mod_mgcv$model[[feature]], pred = pe,
-      server = mod_mgcv$model[["src"]], method = "mgcv"))
-  } else {
-    return(data.frame(x = mod_mgcv$model[[feature]], pred = pe, method = "mgcv"))
-  }
-}
 
 fVizCategorical = function(feature, mod_dsCWB, mod_compboost, mod_mgcv) {
   cds = mod_dsCWB$coef

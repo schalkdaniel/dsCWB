@@ -278,7 +278,7 @@ load(file = here::here("usecase/data/df-full.Rda"))
 load(file = here::here("usecase/data/val-idx.Rda"))
 
 df = 5
-df_random_intercept = 2
+df_random_intercept = 4
 anisotrop = TRUE
 
 site_var = "source"
@@ -340,11 +340,11 @@ df_mgcv$source = NULL
 df_mgcv$heart_disease = ifelse(df_mgcv$heart_disease == "yes", 1, 0)
 
 fmgcv = heart_disease ~
-  #sex + cp + restecg + exang +
-  #s(age, bs = "ps", m = c(3, 2)) +
-  #s(trestbps, bs = "ps", m = c(3, 2)) +
-  #s(thalach, bs = "ps", m = c(3, 2)) +
-  #s(oldpeak, bs = "ps", m = c(3, 2)) +
+  sex + cp + restecg + exang +
+  s(age, bs = "ps", m = c(3, 2)) +
+  s(trestbps, bs = "ps", m = c(3, 2)) +
+  s(thalach, bs = "ps", m = c(3, 2)) +
+  s(oldpeak, bs = "ps", m = c(3, 2)) +
 
   ti(age, src, bs = c('ps', 're')) +
   ti(sex, src, bs = c('re', 're')) +
@@ -376,29 +376,45 @@ mod_mgcv = gam(fmgcv, family = binomial(), data = df_mgcv)
 ##                                                                            ##
 ################################################################################
 
+
+table(cboost$getLoggerData()$baselearner)
+
 source(here::here("usecase/helper.R"))
 
 library(ggplot2)
 library(patchwork)
 
+feature = "oldpeak"
+#feature = "cp"
+
 # Without dsCWB:
-fViz("oldpeak", mod_compboost = cboost, mod_mgcv = mod_mgcv, add_effects = TRUE, dat = df_full)
-fViz("oldpeak", mod_compboost = cboost, mod_mgcv = mod_mgcv, site = FALSE, dat = df_full)
-fViz("oldpeak", mod_compboost = cboost, mod_mgcv = mod_mgcv, site = TRUE, dat = df_full)
+gg1 = fViz(feature, mod_compboost = cboost, mod_mgcv = mod_mgcv, add_effects = TRUE) +
+  ggtitle("Aggregated Effects")
+gg2 = fViz(feature, mod_compboost = cboost, mod_mgcv = mod_mgcv, site = FALSE) +
+  ggtitle("Shared Effect")
+gg3 = fViz(feature, mod_compboost = cboost, mod_mgcv = mod_mgcv, site = TRUE) +
+  ggtitle("Site Effects")
+
+gg = gg1 + gg2 + gg3 & theme(legend.position = "bottom") & mytheme()
+gg + plot_layout(guides = "collect")
+
 
 ## Example for age:
 ## ================================================
 
-ggleft = fViz("age", cwb, cboost, mod_mgcv, site = FALSE, dat = df_full) +
-  ggtitle("age", "Shared feature effect")
+ggleft = fViz("age", cwb, cboost, mod_mgcv, site = FALSE) +
+  ggtitle("age", "Shared feature effect") +
+  ggsci::scale_color_jama()
 
-ggright = fViz("age", cwb, cboost, mod_mgcv, site = TRUE, dat = df_full) +
-  ggtitle("", "Site-effects")
+ggright = fViz("age", cwb, cboost, mod_mgcv, site = TRUE) +
+  ggtitle("", "Site-effects") +
+  ggsci::scale_color_jama()
 
 ggleft + ggright
 
-fViz("age", cwb, cboost, mod_mgcv, site = FALSE, dat = df_full, add_effects = TRUE) +
-  ggtitle("age", "Shared feature effect")
+fViz("age", cwb, cboost, mod_mgcv, site = FALSE, add_effects = TRUE) +
+  ggtitle("age", "Shared feature effect") +
+  ggsci::scale_color_jama()
 
 
 ## All numerical figures:
@@ -408,9 +424,9 @@ fnums = c("age", "trestbps", "thalach", "oldpeak")
 fcats = c("sex", "cp", "restecg", "exang")
 
 ggs = lapply(fnums, function(fname) {
-  ggleft = fViz(fname, cwb, cboost, mod_mgcv, site = FALSE, dat = df_full) +
+  ggleft = fViz(fname, mod_compboost = cboost, mod_mgcv = mod_mgcv, site = FALSE) +
     ggtitle(fname, "Shared feature effect")
-  ggright = fViz(fname, cwb, cboost, mod_mgcv, site = TRUE, dat = df_full) +
+  ggright = fViz(fname, cwb, cboost, mod_mgcv, site = TRUE) +
     ggtitle("", "Site-effects")
 
   gg = ggleft + ggright &
@@ -427,7 +443,7 @@ if (GGSAVE) {
 }
 
 ggs = lapply(fnums, function(fname) {
-  gg = fViz(fname, cwb, cboost, mod_mgcv, dat = df_full, add_effects = TRUE)
+  gg = fViz(fname, mod_compboost = cboost, mod_mgcv = mod_mgcv, add_effects = TRUE)
   if (fname == "age") {
     gg = gg +
       ggtitle("Aggregated site-specific feature effects", fname)
