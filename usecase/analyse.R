@@ -341,28 +341,21 @@ df_mgcv$heart_disease = ifelse(df_mgcv$heart_disease == "yes", 1, 0)
 
 fmgcv = heart_disease ~
   sex + cp + restecg + exang +
+
+  s(sex, src, bs = c('re')) +
+  s(cp, src, bs = c('re')) +
+  s(restecg, src, bs = c('re')) +
+  s(exang, src, bs = c('re')) +
+
   s(age, bs = "ps", m = c(3, 2)) +
   s(trestbps, bs = "ps", m = c(3, 2)) +
   s(thalach, bs = "ps", m = c(3, 2)) +
   s(oldpeak, bs = "ps", m = c(3, 2)) +
 
   ti(age, src, bs = c('ps', 're')) +
-  ti(sex, src, bs = c('re', 're')) +
-  ti(cp, src, bs = c('re', 're')) +
   ti(trestbps, src, bs = c('ps', 're')) +
-  ti(restecg, src, bs = c('re', 're')) +
   ti(thalach, src, bs = c('ps', 're')) +
-  ti(exang, src, bs = c('re', 're')) +
   ti(oldpeak, src, bs = c('ps', 're')) +
-
-  #s(age, by = src, bs = "ps") +
-  #s(sex, by = src, bs = "re") +
-  #s(cp, by = src, bs = "re") +
-  #s(trestbps, by = src, bs = "ps") +
-  #s(restecg, by = src, bs = "re") +
-  #s(thalach, by = src, bs = "re") +
-  #s(exang, by = src, bs = "re") +
-  #s(oldpeak, by = src, bs = "ps") +
 
   s(src, bs = "re")
 

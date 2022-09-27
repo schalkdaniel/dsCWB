@@ -114,15 +114,18 @@ getMGCVPE = function(mod_mgcv, feature, sitevar = NULL, bpattern = NULL, x = NUL
   p = predict(mod_mgcv, type = "terms", newdata = d0)
 
   cnames = colnames(p)
-  if (is.null(bpattern)) {
+  if ((! is.numeric(d0[[feature]])) && is.null(sitevar)) {
+    fidx = which(cnames == feature)
+  } else {
     if (is.null(sitevar)) {
-      bpattern = "s[(]"
+#      bpattern = "s[(]"
+      fidx = which(grepl(feature, cnames) & grepl("s[()]", cnames))
     } else {
-      bpattern = "ti[(]"
+      cnames0 = gsub(" ", "", cnames)
+      site_pattern = paste0(",", sitevar)
+      fidx = which(grepl(feature, cnames) & grepl(site_pattern, cnames0))
     }
   }
-  fidx = which(grepl(feature, cnames) & grepl(bpattern, cnames))
-  if ((! is.numeric(d0[[feature]])) && is.null(sitevar)) fidx = which(cnames == feature)
   pe = unname(p[, fidx])
 
   pedf = data.frame(x = d0[[feature]], pred = pe, method = "mgcv")
