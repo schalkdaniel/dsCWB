@@ -89,13 +89,11 @@ createDFSkeleton = function(x, dat, feature) {
 #' @param mod_mgcv (`gam`) GAM model from `mgcv`.
 #' @param feature (`character(1L)`) Name of the varying variable.
 #' @param sitevar (`character(1L)`) Name of the variable containing the site.
-#' @param bpattern (`character(1L)`) Regexp to filter for a specific base learner.
 #' @param x (`vector()`) Varying values.
-getMGCVPE = function(mod_mgcv, feature, sitevar = NULL, bpattern = NULL, x = NULL) {
+getMGCVPE = function(mod_mgcv, feature, sitevar = NULL, x = NULL) {
   checkmate::assertClass(mod_mgcv, "gam")
   checkmate::assertChoice(feature, colnames(mod_mgcv$model))
   checkmate::assertChoice(sitevar, colnames(mod_mgcv$model), null.ok = TRUE)
-  checkmate::assertCharacter(bpattern, len = 1L, null.ok = TRUE)
   checkmate::assertVector(x, null.ok = TRUE)
 
   if (is.null(x)) {
@@ -118,7 +116,6 @@ getMGCVPE = function(mod_mgcv, feature, sitevar = NULL, bpattern = NULL, x = NUL
     fidx = which(cnames == feature)
   } else {
     if (is.null(sitevar)) {
-#      bpattern = "s[(]"
       fidx = which(grepl(feature, cnames) & grepl("s[()]", cnames))
     } else {
       cnames0 = gsub(" ", "", cnames)

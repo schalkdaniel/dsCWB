@@ -278,7 +278,7 @@ load(file = here::here("usecase/data/df-full.Rda"))
 load(file = here::here("usecase/data/val-idx.Rda"))
 
 df = 5
-df_random_intercept = 4
+df_random_intercept = 3
 anisotrop = TRUE
 
 site_var = "source"
@@ -307,6 +307,10 @@ for (f in fcats) {
 }
 
 cboost$train(20000)
+
+fselected = cboost$getLoggerData()$baselearner
+table(fselected)
+table(c("shared", "site")[as.integer(grepl("_tensor", fselected)) + 1])
 
 ## COMPARISON OF LOGS
 ## ========================================================================== ##
