@@ -190,8 +190,32 @@ getCompboostPE = function(mod_compboost, feature, sitevar = NULL, bpattern = NUL
 }
 
 #### TODO
-getDistCWBPE = function(mod_dsCWB, feature, sitevar = NULL, bpattern = NULL, x = NULL) {
-  getCompboostPE(mod_dsCWB, feature, sitevar, bpattern, x)
+getDistCWBPE = function(mod_dsCWB, feature, site_effects = FALSE, n_points = 100L) {
+  checkmate::assertR6(mod_dsCWB, "HostModel")
+  checkmate::assertChoice(feature, mod_dsCWB$getFeatureNames())
+  checkmate::assertLogical(site_effects, len = 1L)
+  checkmate::assertCount(n_points, positive = TRUE)
+
+  bln = names(mod_dsCWB$bls)
+  bl = mod_dsCWB$bls[[bln[grep(feature, bln)]]]
+  blt = bl$getType()
+
+  if (site_effects) {
+    if (blt == "numeric") {
+      pe = siteFEDataNum(mod_dsCWB, feature, n_points)
+    } else {
+      pe = siteFEDataCat(mod_dsCWB, feature)
+    }
+  } else {
+    if (blt == "numeric") {
+      pe = sharedFEDataNum(mod_dsCWB, feature, n_points)
+    } else {
+      pe = sharedFEDataCat(mod_dsCWB, feature)
+    }
+  }
+  pedf = cbind(pe[, 1:2], method = "dsCWB")
+  if (site_effects) pedf$server = pe$server
+  return(pedf)
 }
 
 #' Create a data.frame with partial effects of a CWB model produced by compboost. Column
@@ -227,14 +251,16 @@ addEffects = function(dshared, dsites, key, keys, name_add_val = "pred") {
 #' @param site (`logical(1L)`) Indicator whether the PEs are site specific or not.
 #' @param add_effects (`logical(1L)`) Should shared and site-specific effects added up to the overall effect?
 #' @param num_points (`integer(1L)`) Number of points used to create the grid for numerical features.
-fVizData = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, add_effects = FALSE, num_points = 100L) {
+#' @param dummy_dist_cwb (`logical(1L)`) Copy the PEs from compboost and set method to `dsCWB`.
+fVizData = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, add_effects = FALSE, num_points = 100L, dummy_dist_cwb = FALSE) {
   checkmate::assertChoice(feature, colnames(mod_mgcv$model))
-  if (! missing(mod_dsCWB)) checkmate::assertR6(mod_dsCWB, "dsCWB")
+  if (! missing(mod_dsCWB)) checkmate::assertR6(mod_dsCWB, "HostModel")
   checkmate::assertR6(mod_compboost, "Compboost")
   checkmate::assertClass(mod_mgcv, "gam")
   checkmate::assertLogical(site, len = 1L)
   checkmate::assertLogical(add_effects, len = 1L)
   checkmate::assertCount(num_points)
+  checkmate::assertLogical(dummy_dist_cwb, len = 1L)
 
   dat = mod_mgcv$model
   x = dat[[feature]]
@@ -247,7 +273,12 @@ fVizData = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, a
 
   svar_mgcv = "src"
   svar_compboost = "source"
+
+  pe_dsCWB = data.frame()
+  pe_mgcv = data.frame()
+  pe_compboost = data.frame()
   if (add_effects) {
+
     pe_mgcv_shared = getMGCVPE(mod_mgcv, feature, sitevar = NULL, x = xnew)
     pe_mgcv_site = getMGCVPE(mod_mgcv, feature, sitevar = svar_mgcv, x = xnew)
 
@@ -259,6 +290,11 @@ fVizData = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, a
     pe_compboost_site = getCompboostPE(mod_compboost, feature, sitevar = svar_compboost, x = xnew)
     pe_compboost = addEffects(pe_compboost_shared, pe_compboost_site, key = "server", keys = skeys)
 
+    if (! missing(mod_dsCWB)) {
+      pe_dsCWB_shared = getDistCWBPE(mod_dsCWB, feature, FALSE, num_points)
+      pe_dsCWB_site = getDistCWBPE(mod_dsCWB, feature, TRUE, num_points)
+      pe_dsCWB = addEffects(pe_dsCWB_shared, pe_dsCWB_site, key = "server", keys = skeys)
+    }
   } else {
     if (! site) {
       svar_mgcv = NULL
@@ -266,8 +302,13 @@ fVizData = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, a
     }
     pe_mgcv = getMGCVPE(mod_mgcv, feature, sitevar = svar_mgcv, x = xnew)
     pe_compboost = getCompboostPE(mod_compboost, feature, sitevar = svar_compboost, x = xnew)
+    if (! missing(mod_dsCWB)) pe_dsCWB = getDistCWBPE(mod_dsCWB, feature, site, num_points)
   }
-  return(rbind(pe_mgcv, pe_compboost))
+  if (dummy_dist_cwb) {
+    pe_dsCWB = pe_compboost
+    pe_dsCWB$method = "dsCWB"
+  }
+  return(rbind(pe_mgcv, pe_compboost, pe_dsCWB))
 }
 
 #' Create a plot for the partial effects for the three methods "distributed CWB" (`dsCWB`),
@@ -280,11 +321,12 @@ fVizData = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, a
 #' @param site (`logical(1L)`) Indicator whether the PEs are site specific or not.
 #' @param add_effects (`logical(1L)`) Should shared and site-specific effects added up to the overall effect?
 #' @param num_points (`integer(1L)`) Number of points used to create the grid for numerical features.
+#' @param dummy_dist_cwb (`logical(1L)`) Copy the PEs from compboost and set method to `dsCWB`.
 fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, add_effects = FALSE,
-  num_points = 100L, plot = TRUE)  {
+  num_points = 100L, plot = TRUE, dummy_dist_cwb = FALSE)  {
 
   checkmate::assertChoice(feature, colnames(mod_mgcv$model))
-  if (! missing(mod_dsCWB)) checkmate::assertR6(mod_dsCWB, "dsCWB")
+  if (! missing(mod_dsCWB)) checkmate::assertR6(mod_dsCWB, "HostModel")
   checkmate::assertR6(mod_compboost, "Compboost")
   checkmate::assertClass(mod_mgcv, "gam")
   checkmate::assertLogical(site, len = 1L)
@@ -292,7 +334,7 @@ fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, add_e
   checkmate::assertCount(num_points)
   checkmate::assertLogical(plot, len = 1L)
 
-  pe_data = fVizData(feature, mod_dsCWB, mod_compboost, mod_mgcv, site, add_effects, num_points)
+  pe_data = fVizData(feature, mod_dsCWB, mod_compboost, mod_mgcv, site, add_effects, num_points, dummy_dist_cwb)
 
   if (! plot) return(invisible(pe_data))
   if (is.numeric(pe_data[[feature]])) {

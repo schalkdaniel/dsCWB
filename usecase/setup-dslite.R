@@ -41,7 +41,7 @@ source(here::here("usecase/helper.R"))
 
 library(DSLite)
 
-datasets = list.files(here::here("usecase/data"), full.names = TRUE)
+datasets = list.files(here::here("usecase/data"), full.names = TRUE, pattern = ".data")
 
 ll_data = list()
 for (file in datasets) {

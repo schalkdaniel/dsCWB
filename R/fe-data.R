@@ -48,6 +48,7 @@ sharedFEDataCat = function(cwb, feature) {
   bln = blns[grepl(feature, blns)]
   bl = cwb$bls[[bln]]
   coefs = cwb$coef$shared[[bln]]
+  if (is.null(coefs)) coefs = 0
 
   df_fe = data.frame(
     val = names(bl$getDictionary()),
