@@ -1,0 +1,26 @@
+[31mfunction[39m[33m([39mcwb, feature[33m)[39m [33m{[39m
+  [36mtcheck[39m[34m([39mcwb[34m)[39m
+  checkmate::[36massertChoice[39m[34m([39mfeature, choices = cwb[32m$[39m[36mgetFeatureNames[39m[36m([39m[36m)[39m[34m)[39m
+
+  ss [32m=[39m [36mnames[39m[34m([39mcwb[32m$[39mcoef[32m$[39msite[34m)[39m
+  blns [32m=[39m [36mnames[39m[34m([39mcwb[32m$[39mcoef[32m$[39msite[36m[[[39m[34m1[39m[36m][39m[36m][39m[34m)[39m
+  bln [32m=[39m blns[34m[[39m[36mgrepl[39m[36m([39mfeature, blns[36m)[39m[34m][39m
+  bl [32m=[39m cwb[32m$[39mbls[34m[[[39mbln[34m][39m[34m][39m
+  coefs [32m=[39m [36mlapply[39m[34m([39mss, [31mfunction[39m[36m([39ms[36m)[39m [36m{[39m
+    cout [32m=[39m cwb[32m$[39mcoef[32m$[39msite[33m[[[39ms[33m][39m[33m][39m[33m[[[39mbln[33m][39m[33m][39m
+    [36mnames[39m[33m([39mcout[33m)[39m [32m=[39m [36mnames[39m[33m([39mbl[32m$[39m[36mgetDictionary[39m[34m([39m[34m)[39m[33m)[39m
+    cout
+  [36m}[39m[34m)[39m
+  [36mnames[39m[34m([39mcoefs[34m)[39m [32m=[39m ss
+
+  df_fe [32m=[39m [36mdo.call[39m[34m([39mrbind, [36mlapply[39m[36m([39mss, [31mfunction[39m[33m([39ms[33m)[39m [33m{[39m
+    pred [32m=[39m coefs[34m[[[39ms[34m][39m[34m][39m
+    out [32m=[39m [36mdata.frame[39m[34m([39mval = [36mnames[39m[36m([39mpred[36m)[39m, pred = pred, server = s[34m)[39m
+    [36mreturn[39m[34m([39mout[34m)[39m
+  [33m}[39m[36m)[39m[34m)[39m
+  [36mcolnames[39m[34m([39mdf_fe[34m)[39m[34m[[39m[34m1[39m[34m][39m [32m=[39m feature
+
+  [36mreturn[39m[34m([39mdf_fe[34m)[39m
+[33m}[39m
+<environment: namespace:dsCWB>
+
