@@ -228,6 +228,18 @@ fmgcv = heart_disease ~
 
 mod_mgcv = gam(fmgcv, family = binomial(), data = df_mgcv)
 
+# Calculate risk
+d0 = mod_compboost$data
+d0$src = d0$source
+p = predict(mod_mgcv, newdata = d0)
+y = as.vector(mod_compboost$response$getResponse())
+
+mean(log(1 + exp(-y * p)))
+#> [1] 0.4441
+min(mod_compboost$model$getRiskVector())
+#> [1] 0.4245
+min(mod_dsCWB$getLog()$risk_train)
+#> [1] 0.4245
 
 ################################################################################
 ##                                                                            ##
