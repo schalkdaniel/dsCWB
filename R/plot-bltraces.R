@@ -13,8 +13,10 @@
 #'   Value used to show the base learner development w.r.t. to the value.
 #' @param n_legend (`integer(1L)`)\cr
 #'   Number of colored base learners added to the legend.
+#' @param pretty_names (`logical(1L)`)\cr
+#'   When set to `TRUE`, the label names are transformed to "feature (effect-type)".
 #' @export
-plotBaselearnerTraces = function(cwb, value = 1, n_legend = 5L, add_effect_type = TRUE) {
+plotBaselearnerTraces = function(cwb, value = 1, n_legend = 5L, add_effect_type = TRUE, pretty_names = FALSE) {
   if (! requireNamespace("ggplot2", quietly = TRUE)) stop("Please install ggplot2 to create plots.")
   if (! requireNamespace("ggrepel", quietly = TRUE)) stop("Please install ggrepel to create plots.")
 
@@ -29,6 +31,13 @@ plotBaselearnerTraces = function(cwb, value = 1, n_legend = 5L, add_effect_type 
     df_plot$effect_type = l$effect_type[-1]
     df_plot$bl_old = bl
     df_plot$blearner = paste0(bl, "-", df_plot$effect_type)
+
+    if (pretty_names) {
+      blp = vapply(bl, FUN.VALUE = character(1L), FUN = function(b) {
+        strsplit(b, "-")[[1]][1]
+      })
+      df_plot$blearner = paste0(blp, " (", df_plot$effect_type, ")")
+    }
   }
 
   if (length(value) %in% c(1L, length(bl))) {

@@ -116,17 +116,16 @@ if (FALSE) {
   library(ggplot2)
   library(patchwork)
 
-
-
   ## Base learner traces:
   ## =================================================================
 
-  gg_traces_effects = plotBaselearnerTraces(cwb, n_legend = 7L, add_effect_type = TRUE) +
+  gg_traces_effects = plotBaselearnerTraces(cwb, n_legend = 4L, add_effect_type = TRUE, pretty_names = TRUE) +
     ggsci::scale_color_jama() +
     ggsci::scale_fill_jama() +
     mytheme() +
     theme(legend.title = element_blank(), legend.position = "bottom") +
-    ylab("Relative frequency\nof included base learner")
+    ylab("Proportion of\nadded base learners") +
+    guides(fill = guide_legend(ncol = 1))
 
   gg_traces_effects
 
@@ -146,7 +145,7 @@ if (FALSE) {
 
   if (GGSAVE) {
     ggsave(gg_risk, filename = here::here("usecase/figures/gg-risk.pdf"), width = 13,
-      height = 6, units = "cm")
+      height = 4.2, units = "cm")
   }
 
   ## Feature importance:
@@ -174,13 +173,13 @@ if (FALSE) {
     ylab("VIP") +
     theme(legend.position = "bottom")
 
-  gg_traces_vip = (gg_traces_effects + gg_vip) / guide_area() +
-    plot_layout(widths = c(2, 1), heights = c(4, 1), guides = "collect")
+  gg_traces_vip = gg_traces_effects + guide_area() + gg_vip +
+    plot_layout(widths = c(2, 1.2, 2), guides = "collect")
   gg_traces_vip
 
   if (GGSAVE) {
-    ggsave(gg_traces_vip, filename = here::here("usecase/figures/gg-traces-vip.pdf"),
-      width = 25, height = 10, units = "cm")
+    ggsave(gg_traces_vip, filename = here::here("usecase/figures/gg-traces-vip4.pdf"),
+      width = 20, height = 5.3, units = "cm")
   }
 
   ## Partial feature effects:
@@ -191,7 +190,7 @@ if (FALSE) {
     ggshared = ggplot(fe_op_sh, aes_string(x = feat, y = "pred")) +
       geom_line() +
       mytheme() +
-      ylab("Partial feature effect") +
+      ylab("Partial feature\neffect") +
       ggtitle("Shared effect")
 
     fe_op_si = siteFEDataNum(cwb, feat)
@@ -199,7 +198,7 @@ if (FALSE) {
       geom_line() +
       mytheme() +
       ggsci::scale_color_jama() +
-      ylab("Partial feature effect") +
+      ylab("Partial feature\neffect") +
       ggtitle("Site effects") +
       theme(legend.title = element_blank())
 
@@ -209,11 +208,11 @@ if (FALSE) {
       geom_line() +
       mytheme() +
       ggsci::scale_color_jama() +
-      ylab("Partial feature effect") +
+      ylab("Partial feature\neffect") +
       ggtitle("Shared + site effects") +
       theme(legend.title = element_blank())
 
-    gg = ggsite + ggagg & theme(legend.position = "bottom")
+    gg = ggsite + ggagg #& theme(legend.position = "bottom")
     gg = gg + plot_layout(guides = "collect")
 
     gg = ggshared + gg + plot_layout(widths = c(1, 2))
@@ -261,7 +260,7 @@ if (FALSE) {
 
   if (GGSAVE) {
     ggsave(gg_oldpeak2, filename = here::here("usecase/figures/gg-oldpeak2.pdf"),
-      width = 25, height = 8, units = "cm")
+      width = 25, height = 4.5, units = "cm")
   }
 
   fnums = c("age", "trestbps", "thalach", "oldpeak")

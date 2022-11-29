@@ -323,7 +323,7 @@ fVizData = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, a
 #' @param num_points (`integer(1L)`) Number of points used to create the grid for numerical features.
 #' @param dummy_dist_cwb (`logical(1L)`) Copy the PEs from compboost and set method to `dsCWB`.
 fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, add_effects = FALSE,
-  num_points = 100L, plot = TRUE, dummy_dist_cwb = FALSE)  {
+  num_points = 100L, plot = TRUE, dummy_dist_cwb = FALSE, ncols = 2)  {
 
   checkmate::assertChoice(feature, colnames(mod_mgcv$model))
   if (! missing(mod_dsCWB)) checkmate::assertR6(mod_dsCWB, "HostModel")
@@ -341,7 +341,7 @@ fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, add_e
     if (site || add_effects) {
       gg = ggplot(pe_data, aes_string(x = feature, y = "pred", color = "method", linetype = "method")) +
         geom_line() +
-        facet_wrap(~ server, ncol = 2)
+        facet_wrap(~ server, ncol = ncols)
     } else {
       gg = ggplot(pe_data, aes_string(x = feature, y = "pred", color = "method", linetype = "method")) +
         geom_line()
@@ -350,7 +350,7 @@ fViz = function(feature, mod_dsCWB, mod_compboost, mod_mgcv, site = FALSE, add_e
     if (site || add_effects) {
       gg = ggplot(pe_data, aes_string(x = feature, y = "pred", color = "method", shape = "method")) +
         geom_point(position = position_dodge(0.2)) +
-        facet_wrap(~ server, ncol = 2)
+        facet_wrap(~ server, ncol = ncols)
     } else {
       gg = ggplot(pe_data, aes_string(x = feature, y = "pred", color = "method", shape = "method")) +
         geom_point(position = position_dodge(0.2))

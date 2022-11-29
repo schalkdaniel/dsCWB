@@ -289,8 +289,16 @@ gg_all_num
 if (GGSAVE) {
   ggsave(gg_all_num, filename = here::here("usecase/figures/fe-nums-add-effects.pdf"), width = 22, height = 20, unit = "cm")
 
-  ggsave(ggs_num[[4]] + ggtitle("Aggregated site-specific feature effects", "oldpeak"),
-    filename = here::here("usecase/figures/fe-oldpeak-mgcv.pdf"), width = 11, height = 10, unit = "cm")
+  ggs = fViz("oldpeak", mod_dsCWB = mod_dsCWB, mod_compboost = mod_compboost,
+    mod_mgcv = mod_mgcv, add_effects = TRUE, ncols = 4) +
+    ggtitle("Aggregated site-specific feature effects", "oldpeak") +
+    ggsci::scale_color_jama() +
+    mytheme() +
+    ylab("Partial feature effect") +
+    labs(color = "", linetype = "")
+
+  ggsave(ggs,
+    filename = here::here("usecase/figures/fe-oldpeak-mgcv.pdf"), width = 20, height = 6, unit = "cm")
 }
 
 
@@ -323,9 +331,14 @@ gg_all_cat
 if (GGSAVE) {
   ggsave(gg_all_cat, filename = here::here("usecase/figures/fe-cats-add-effects.pdf"), width = 22, height = 20, unit = "cm")
 
+
   ggsave(ggs_cat[[2]] + ggtitle("Aggregated site-specific feature effects", "cp"),
     filename = here::here("usecase/figures/fe-cp-mgcv.pdf"), width = 11, height = 10, unit = "cm")
 }
 
 
-datashield.logout(connections)
+nidx = sapply(df_full, is.numeric)
+knitr::kable(skimr::skim(df_full[, nidx]), format = "latex")
+knitr::kable(skimr::skim(df_full[, !nidx]), format = "latex")
+
+paste(paste0("$", round(summary(df_full$age), 2), "$"), collapse = " & ")
