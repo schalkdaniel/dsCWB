@@ -4,7 +4,13 @@
 \alias{updateClientPenalty}
 \title{Update the penalties of the client models.}
 \usage{
-updateClientPenalty(model_symbol, ll_pen_binary, anistrop = TRUE)
+updateClientPenalty(
+  model_symbol,
+  ll_pen_binary,
+  anistrop = TRUE,
+  simple = FALSE,
+  update_random_intercept = FALSE
+)
 }
 \arguments{
 \item{model_symbol}{(`character(1L)`)\cr
@@ -15,6 +21,12 @@ Named list with new penalty terms encoded by `encodeObject`.}
 
 \item{anistrop}{(`logical(1L)`)\cr
 Flag indicating whether the penalty should be done anistrop or isotrop.}
+
+\item{simple}{(`logical(1L)`)\cr
+Flag indicating that just the penalty is updated but no tensor operation is applied.}
+
+\item{update_random_intercept}{(`logical(1L)`)\cr
+Flag indicating whether the random intercept penalty should also get updated or not.}
 }
 \description{
 Update the penalties of the client models.

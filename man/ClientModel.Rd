@@ -41,6 +41,7 @@ List of base learner.}
 \item \href{#method-getOffset}{\code{ClientModel$getOffset()}}
 \item \href{#method-getTarget}{\code{ClientModel$getTarget()}}
 \item \href{#method-getTrainValObs}{\code{ClientModel$getTrainValObs()}}
+\item \href{#method-getTrainValIndex}{\code{ClientModel$getTrainValIndex()}}
 \item \href{#method-clone}{\code{ClientModel$clone()}}
 }
 }
@@ -61,7 +62,10 @@ Creates a new instance of this [R6][R6::R6Class] class.
   derivs = 2L,
   val_fraction = NULL,
   positive = NULL,
-  seed = NULL
+  seed = NULL,
+  envir = private$p_envir,
+  random_intercept = TRUE,
+  random_intercept_df = 2
 )}\if{html}{\out{</div>}}
 }
 
@@ -100,6 +104,15 @@ Character indicating the positive class in the binary classification setting.}
 
 \item{\code{seed}}{(`integer(1L)`)\cr
 Seed used for drawing the validation data.}
+
+\item{\code{envir}}{(`environment()`)\cr
+Environment of the data.}
+
+\item{\code{random_intercept}}{(`logical(1L)`)\cr
+Indicator whether random intercepts should be added or not.}
+
+\item{\code{random_intercept_df}}{(`integer(1L)`)\cr
+Penalty of the random intercept.}
 }
 \if{html}{\out{</div>}}
 }
@@ -285,7 +298,12 @@ Character containing the base learner name.}
 \subsection{Method \code{updatePenalty()}}{
 Re-set the penalty terms.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{ClientModel$updatePenalty(ll_pen, anistrop = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{ClientModel$updatePenalty(
+  ll_pen,
+  anistrop = TRUE,
+  simple = FALSE,
+  update_random_intercept = FALSE
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -296,6 +314,12 @@ Named list with new penalty terms.}
 
 \item{\code{anistrop}}{(`logical(1L)`)\cr
 Flag indicating whether the penalty should be done anistrop or isotrop.}
+
+\item{\code{simple}}{(`logical(1L)`)\cr
+Flag indicating that just the penalty is updated but no tensor operation is applied.}
+
+\item{\code{update_random_intercept}}{(`logical(1L)`)\cr
+Flag indicating whether the random intercept penalty should also get updated or not.}
 }
 \if{html}{\out{</div>}}
 }
@@ -385,6 +409,16 @@ and `val` (for the validation vector).}
 Get the number of rows per train and validation set.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ClientModel$getTrainValObs()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-getTrainValIndex"></a>}}
+\if{latex}{\out{\hypertarget{method-getTrainValIndex}{}}}
+\subsection{Method \code{getTrainValIndex()}}{
+Get List of train and test indices.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{ClientModel$getTrainValIndex()}\if{html}{\out{</div>}}
 }
 
 }

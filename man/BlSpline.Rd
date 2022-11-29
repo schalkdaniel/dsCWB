@@ -316,7 +316,7 @@ Get knot range.
 \subsection{Method \code{updatePenalty()}}{
 Re-set the penalty terms.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{BlSpline$updatePenalty(pen, anistrop = TRUE)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{BlSpline$updatePenalty(pen, anistrop = TRUE, simple = FALSE)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -327,6 +327,9 @@ New penalty terms.}
 
 \item{\code{anistrop}}{(`logical(1L)`)\cr
 Flag indicating whether the penalty should be done anistrop or isotrop.}
+
+\item{\code{simple}}{(`logical(1L)`)\cr
+Flag indicating that just the penalty is updated but no tensor operation is applied.}
 }
 \if{html}{\out{</div>}}
 }

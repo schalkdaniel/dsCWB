@@ -21,7 +21,9 @@ dsCWB(
   positive = NULL,
   seed = NULL,
   trace = TRUE,
-  force_shared_iters = NULL
+  force_shared_iters = NULL,
+  random_intercept = TRUE,
+  random_intercept_df = 2
 )
 }
 \arguments{
@@ -75,6 +77,12 @@ Indicator if the fitting trace should be printed or not.}
 
 \item{force_shared_iters}{(`integer(1L)`)\cr
 Number of iterations in the beginning that are just training the shared effect.}
+
+\item{random_intercept}{(`logical(1L)`)\cr
+Indicator whether random intercepts should be added or not.}
+
+\item{random_intercept_df}{(`integer(1L)`)\cr
+Penalty of the random intercept.}
 }
 \value{
 Client model of R6 class ClientModel.

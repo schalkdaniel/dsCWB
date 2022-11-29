@@ -4,7 +4,13 @@
 \alias{plotBaselearnerTraces}
 \title{Visualize base learner traces}
 \usage{
-plotBaselearnerTraces(cwb, value = 1, n_legend = 5L, add_effect_type = TRUE)
+plotBaselearnerTraces(
+  cwb,
+  value = 1,
+  n_legend = 5L,
+  add_effect_type = TRUE,
+  pretty_names = FALSE
+)
 }
 \arguments{
 \item{value}{(`numeric(1L) | numeric()`)\cr
@@ -12,6 +18,9 @@ Value used to show the base learner development w.r.t. to the value.}
 
 \item{n_legend}{(`integer(1L)`)\cr
 Number of colored base learners added to the legend.}
+
+\item{pretty_names}{(`logical(1L)`)\cr
+When set to `TRUE`, the label names are transformed to "feature (effect-type)".}
 
 \item{cboost}{(`HostModel`)\cr
 A trained host model.}

@@ -15,7 +15,9 @@ createClientModel(
   derivs = 2L,
   val_fraction = NULL,
   positive = NULL,
-  seed = NULL
+  seed = NULL,
+  random_intercept = TRUE,
+  random_intercept_df = 2
 )
 }
 \arguments{
