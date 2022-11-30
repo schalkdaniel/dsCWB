@@ -278,11 +278,22 @@ BlSpline = R6Class("BlSpline",
         if (anisotrop) {
           p0 = pen * diag(ncol(private$p_penmat))
           pnew = private$p_penalty * private$p_penmat + p0
-          private$p_xtx_inv = solve(private$p_xtx + pnew)
+          e = try({solve(private$p_xtx + pnew)}, silent = TRUE)
+          if (inherits(e, "try-error")) {
+            stop(sprintf("Failed to invert matrix for feature %s", private$p_feature))
+          } else {
+            private$p_xtx_inv = e
+          }
+
           private$p_penalty = c(private$p_penalty, pen)
         } else {
           private$p_penalty = pen
-          private$p_xtx_inv = solve(private$p_xtx + private$p_penalty * private$p_penmat)
+          e = try({solve(private$p_xtx + private$p_penalty * private$p_penmat)}, silent = TRUE)
+          if (inherits(e, "try-error")) {
+            stop(sprintf("Failed to invert matrix for feature %s", private$p_feature))
+          } else {
+            private$p_xtx_inv = e
+          }
         }
       }
 
@@ -604,14 +615,25 @@ BlOneHot = R6Class("BlOneHot",
       checkmate::assertNumeric(pen, len = 1L, lower = 0, any.missing = FALSE)
       if (simple) {
         pnew = pen * private$p_penmat
-        private$p_xtx_inv = solve(private$p_xtx + pnew)
+        e = try({solve(private$p_xtx + pnew)}, silent = TRUE)
+        if (inherits(e, "try-error")) {
+          stop(sprintf("Failed to invert matrix for feature %s", private$p_feature))
+        } else {
+          private$p_xtx_inv = e
+        }
+
         private$p_penalty = pen
       } else {
         if (anisotrop) {
           p0 = pen * diag(ncol(private$p_penmat))
           pnew = private$p_penalty * private$p_penmat + p0
           private$p_penmat = pnew
-          private$p_xtx_inv = solve(private$p_xtx + pnew)
+          e = try({solve(private$p_xtx + pnew)}, silent = TRUE)
+          if (inherits(e, "try-error")) {
+            stop(sprintf("Failed to invert matrix for feature %s", private$p_feature))
+          } else {
+            private$p_xtx_inv = e
+          }
           private$p_penalty = c(private$p_penalty, pen)
 
         } else {

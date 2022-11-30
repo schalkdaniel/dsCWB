@@ -80,27 +80,15 @@ password = "password"
 
 builder = newDSLoginBuilder()
 
-builder$append(
-  server   = "server1",
-  url      = surl,
-  user     = username,
-  password = password,
-  table    = "CNSIM.CNSIM1"
-)
-builder$append(
-  server   = "server2",
-  url      = surl,
-  user     = username,
-  password = password,
-  table    = "CNSIM.CNSIM2"
-)
-builder$append(
-  server   = "server3",
-  url      = surl,
-  user     = username,
-  password = password,
-  table    = "CNSIM.CNSIM3"
-)
+for (i in seq_len(3L)) {
+  builder$append(
+    server   = paste0("server", i),
+    url      = surl,
+    user     = username,
+    password = password,
+    table    = paste0("CNSIM.CNSIM", i)
+  )
+}
 connections = datashield.login(logins = builder$build(), assign = TRUE)
 datashield.symbols(connections)
 
@@ -113,10 +101,11 @@ dsBaseClient::ds.dim("Dclean")
 symbol = "Dclean"
 target = "LAB_TSC"
 feature_names = setdiff(dsBaseClient::ds.names("D", connections)[[1]], target)
+feature_names = c("GENDER", "DIS_DIAB", "PM_BMI_CATEGORICAL")
 
 time = Sys.time()
 cwb = dsCWB(connections, "Dclean", target, feature_names, mstop = 100L,
-  val_fraction = 0.1, patience = 5L, seed = 31415L)
+  val_fraction = 0.1, patience = 5L, seed = 31415L, nknots = 10L)
 time = Sys.time() - time
 
 l = cwb$getLog()
