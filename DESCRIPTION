@@ -25,7 +25,8 @@ Suggests:
     opalr,
     dsBaseClient
 Remotes:
-    schalkdaniel/cpsp
+    schalkdaniel/cpsp,
+    datashield/dsBaseClient
 AggregateMethods:
     getClientInit,
     getClientXtX,
