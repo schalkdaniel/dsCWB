@@ -8,7 +8,6 @@ output: github_document
 options(width = 80)
 
 knitr::opts_chunk$set(
-  eval = FALSE,
   collapse = TRUE,
   comment = "#>",
   fig.path = "Readme_files/"
