@@ -41,3 +41,90 @@ publishing the package on OPAL (see
 
 Note that the package needs to be installed at both locations, the
 server and the analysts machine.
+
+## Usage
+
+``` r
+devtools::load_all()
+
+library(DSI)
+library(DSOpal)
+
+surl     = "https://opal-demo.obiba.org/"
+username = "administrator"
+password = "password"
+
+builder = newDSLoginBuilder()
+
+for (i in seq_len(3L)) {
+  builder$append(
+    server   = paste0("server", i),
+    url      = surl,
+    user     = username,
+    password = password,
+    table    = paste0("CNSIM.CNSIM", i)
+  )
+}
+connections = datashield.login(logins = builder$build(), assign = TRUE)
+datashield.symbols(connections)
+
+datashield.assign(connections, "Dclean", quote(dsNaRm("D")))
+datashield.symbols(connections)
+
+dsBaseClient::ds.dim("D")
+dsBaseClient::ds.dim("Dclean")
+
+symbol = "Dclean"
+target = "LAB_TSC"
+feature_names = c("GENDER", "DIS_DIAB", "LAB_HDL", "LAB_TRIG")
+
+cwb = dsCWB(connections, "Dclean", target, feature_names, mstop = 100L,
+  val_fraction = 0.2, patience = 3L, seed = 31415L)
+
+# Visualize selected base learner:
+plotBaselearnerTraces(cwb)
+
+# Get log for further investigation:
+l = cwb$getLog()
+l$minutes = as.numeric(difftime(l$time, l$time[1], units = "mins"))
+
+library(ggplot2)
+
+# Plot train vs test risk:
+ggplot(l, aes(x = minutes)) +
+  geom_line(aes(y = risk_train, color = "Train risk")) +
+  geom_line(aes(y = risk_val, color = "Val risk")) +
+  labs(color = "") + xlab("Minutes") + ylab("Risk")
+
+# Visualize effect LAB_TRIG (no site-specific corrections):
+pdata_LAB_TRIG = cwb$featureEffectData("LAB_TRIG")
+ggplot(pdata_LAB_TRIG, aes(x = value, y = pred)) +
+  geom_line()
+
+# Effect of GENDER (just site-specific effects):
+pdata_GENDER = cwb$featureEffectData("GENDER")
+ggplot(pdata_GENDER, aes(x = value, y = pred, color = server)) +
+  geom_boxplot() +
+  facet_grid(~ server) +
+  guides(color = "none")
+
+datashield.logout(connections)
+```
+
+## Citing
+
+To cite `dsCWB` in publications, please use:
+
+> Schalk, D., Bischl, B., & Rügamer, D. (2022). Privacy-Preserving and
+> Lossless Distributed Estimation of High-Dimensional Generalized
+> Additive Mixed Models. arXiv preprint arXiv:2210.07723.
+
+    @article{schalk2022dcwb,
+      doi = {10.48550/ARXIV.2210.07723},
+      url = {https://arxiv.org/abs/2210.07723},
+      author = {Schalk, Daniel and Bischl, Bernd and Rügamer, David},
+      title = {Privacy-Preserving and Lossless Distributed Estimation of High-Dimensional Generalized Additive Mixed Models},
+      publisher = {arXiv},
+      year = {2022},
+      copyright = {Creative Commons Attribution 4.0 International}
+    }
