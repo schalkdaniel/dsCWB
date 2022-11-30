@@ -20,8 +20,10 @@ Imports:
 Suggests:
     DSOpal,
     ggplot2,
+    ggrepel,
     testthat,
-    opalr
+    opalr,
+    dsBaseClient
 Remotes:
     schalkdaniel/cpsp
 AggregateMethods:

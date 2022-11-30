@@ -7,12 +7,14 @@
 #' evolves during the fitting process.
 #'
 #' @return \code{ggplot} object containing the graphic.
-#' @param cboost (`HostModel`)\cr
+#' @param cwb (`HostModel`)\cr
 #'   A trained host model.
 #' @param value (`numeric(1L) | numeric()`)\cr
 #'   Value used to show the base learner development w.r.t. to the value.
 #' @param n_legend (`integer(1L)`)\cr
 #'   Number of colored base learners added to the legend.
+#' @param add_effect_type (`logical(1L)`)\cr
+#'   If `TRUE`, then the type (main or site) is appended to the base learner name.
 #' @param pretty_names (`logical(1L)`)\cr
 #'   When set to `TRUE`, the label names are transformed to "feature (effect-type)".
 #' @export

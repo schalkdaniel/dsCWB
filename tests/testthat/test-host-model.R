@@ -6,7 +6,7 @@ test_that("host model can be initialized correctly",  {
   fns = setdiff(names(iris), target)
 
   ## Define client model to get XtX, Xty, etc.:
-  cm      = ClientModel$new(symbol, target)
+  cm      = ClientModel$new(symbol, target, random_intercept = FALSE)
   ll_init = getClientInit(symbol, encodeObject(cm$getFeatureNames()))
   cm$addBaselearners(ll_init)
   ll_xtx = cm$getXtX()
@@ -38,7 +38,7 @@ test_that("update step is working", {
   fns = setdiff(names(iris), target)
 
   ## Define client model to get XtX, Xty, etc.:
-  cm      = ClientModel$new(symbol, target)
+  cm      = ClientModel$new(symbol, target, random_intercept = FALSE)
   ll_init = getClientInit(symbol, encodeObject(cm$getFeatureNames()))
   cm$addBaselearners(ll_init)
   ll_xtx = cm$getXtX()

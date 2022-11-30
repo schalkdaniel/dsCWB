@@ -21,6 +21,10 @@
 #'   Name of the positive class in binary classification.
 #' @param seed (`numeric(1L)`)\cr
 #'   Seed for generating validation data (only applies when val_fraction is set).
+#' @param random_intercept (`logical(1L)`)\cr
+#'   Indicator to add a random intercept.
+#' @param random_intercept_df (`numeric(1L)`)\cr
+#'   Degrees of freedom for the random intercept.
 #' @return Client model of R6 class ClientModel.
 #' @export
 createClientModel = function(symbol, target, feature_names = NULL, learning_rate = 0.1, df = 5, nknots = 20L,

@@ -47,11 +47,9 @@ test_that("Binomial loss works correctly", {
   ol = log(l$init(tr) / (1 - l$init(tr)))
   expect_equal(round(oc, 4), round(ol, 4))
 
-
   trs = list(tr[1:34], tr[35:80], tr[81:100])
   inits = sapply(trs, l$init)
   w = sapply(trs, length)
 
   expect_equal(l$aggregateInit(inits, w), ol)
 })
-

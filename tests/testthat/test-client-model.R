@@ -136,10 +136,11 @@ test_that("client model generation works on DataSHIELD server", {
     }
     expect_equal(cli$Species[[1]], names(table(iris$Species)))
 
+    cnms = names(dsBaseClient::ds.names("dat", connections))
+    cli$random_intercept = list(table = cnms, class = "categorical")
     call_init = paste0("initClientModel(\"cm\", \"", encodeObject(cli), "\")")
     eval(parse(text = paste0("cq = quote(", call_init, ")")))
 
-    cnms = names(dsBaseClient::ds.names("dat", connections))
     for (i in seq_along(connections)) {
       dsBaseClient::ds.make(sprintf("\"%s\"", cnms[i]), "SNAME", connections[i])
     }

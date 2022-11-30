@@ -13,17 +13,20 @@ plotBaselearnerTraces(
 )
 }
 \arguments{
+\item{cwb}{(`HostModel`)\cr
+A trained host model.}
+
 \item{value}{(`numeric(1L) | numeric()`)\cr
 Value used to show the base learner development w.r.t. to the value.}
 
 \item{n_legend}{(`integer(1L)`)\cr
 Number of colored base learners added to the legend.}
 
+\item{add_effect_type}{(`logical(1L)`)\cr
+If `TRUE`, then the type (main or site) is appended to the base learner name.}
+
 \item{pretty_names}{(`logical(1L)`)\cr
 When set to `TRUE`, the label names are transformed to "feature (effect-type)".}
-
-\item{cboost}{(`HostModel`)\cr
-A trained host model.}
 }
 \value{
 \code{ggplot} object containing the graphic.

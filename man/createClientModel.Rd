@@ -53,6 +53,12 @@ Name of the positive class in binary classification.}
 
 \item{seed}{(`numeric(1L)`)\cr
 Seed for generating validation data (only applies when val_fraction is set).}
+
+\item{random_intercept}{(`logical(1L)`)\cr
+Indicator to add a random intercept.}
+
+\item{random_intercept_df}{(`numeric(1L)`)\cr
+Degrees of freedom for the random intercept.}
 }
 \value{
 Client model of R6 class ClientModel.
