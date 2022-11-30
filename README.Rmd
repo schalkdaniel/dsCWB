@@ -66,9 +66,6 @@ Note that the package needs to be installed at both locations, the server and th
 ## Usage
 
 ```{r}
-
-q()
-R
 devtools::load_all()
 
 library(DSI)
@@ -100,63 +97,55 @@ dsBaseClient::ds.dim("Dclean")
 
 symbol = "Dclean"
 target = "LAB_TSC"
-feature_names = setdiff(dsBaseClient::ds.names("D", connections)[[1]], target)
-feature_names = c("GENDER", "DIS_DIAB", "PM_BMI_CATEGORICAL")
+feature_names = c("GENDER", "DIS_DIAB", "LAB_HDL", "LAB_TRIG")
 
-time = Sys.time()
 cwb = dsCWB(connections, "Dclean", target, feature_names, mstop = 100L,
-  val_fraction = 0.1, patience = 5L, seed = 31415L, nknots = 10L)
-time = Sys.time() - time
+  val_fraction = 0.2, patience = 3L, seed = 31415L)
 
+# Visualize selected base learner:
+plotBaselearnerTraces(cwb)
+
+# Get log for further investigation:
 l = cwb$getLog()
 l$minutes = as.numeric(difftime(l$time, l$time[1], units = "mins"))
 
 library(ggplot2)
 
+# Plot train vs test risk:
 ggplot(l, aes(x = minutes)) +
   geom_line(aes(y = risk_train, color = "Train risk")) +
-  geom_line(aes(y = risk_val, color = "Val risk"))
+  geom_line(aes(y = risk_val, color = "Val risk")) +
+  labs(color = "") + xlab("Minutes") + ylab("Risk")
 
-table(l$bl)
-table(l$effect_type)
-
-newdata = na.omit(read.csv("~/Downloads/data.csv"))[1:10, ]
-cwb$predictIndividual(newdata)
-pred = cwb$predict(newdata, "server1")
-truth = newdata[[target]]
-
-dval = data.frame(pred, truth)
-ggplot(dval, aes(x = pred, y = truth)) + geom_point()
-
-pdata1 = cwb$featureEffectData("LAB_TRIG")
-
-ggplot(pdata1, aes(x = value, y = pred, color = server, linetype = effect_type)) +
+# Visualize effect LAB_TRIG (no site-specific corrections):
+pdata_LAB_TRIG = cwb$featureEffectData("LAB_TRIG")
+ggplot(pdata_LAB_TRIG, aes(x = value, y = pred)) +
   geom_line()
 
-pdata2 = cwb$featureEffectData("GENDER")
-ggplot(pdata2, aes(x = value, y = pred, color = server, linetype = effect_type)) +
+# Effect of GENDER (just site-specific effects):
+pdata_GENDER = cwb$featureEffectData("GENDER")
+ggplot(pdata_GENDER, aes(x = value, y = pred, color = server)) +
   geom_boxplot() +
   facet_grid(~ server) +
   guides(color = "none")
 
-
-
-
-
-
-cwb$get
-mstop = 20L
-learning_rate = 0.1
-df = 5
-nknots = 20L
-ord = 3L
-derivs = 2L
-val_fraction = 0.1
-patience = 5
-eps_for_break = 0.1
-positive = NULL
-seed = 31415
-trace = TRUE
-
 datashield.logout(connections)
+```
+
+## Citing
+
+To cite `dsCWB` in publications, please use:
+
+> Schalk, D., Bischl, B., & Rügamer, D. (2022). Privacy-Preserving and Lossless Distributed Estimation of High-Dimensional Generalized Additive Mixed Models. arXiv preprint arXiv:2210.07723.
+
+```
+@article{schalk2022dcwb,
+  doi = {10.48550/ARXIV.2210.07723},
+  url = {https://arxiv.org/abs/2210.07723},
+  author = {Schalk, Daniel and Bischl, Bernd and Rügamer, David},
+  title = {Privacy-Preserving and Lossless Distributed Estimation of High-Dimensional Generalized Additive Mixed Models},
+  publisher = {arXiv},
+  year = {2022},
+  copyright = {Creative Commons Attribution 4.0 International}
+}
 ```
