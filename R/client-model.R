@@ -41,7 +41,8 @@ ClientModel = R6Class("ClientModel",
     #'   Penalty of the random intercept.
     initialize = function(symbol = "D", target, feature_names = NULL, learning_rate = 0.1, df = 5L,
       nknots = 20L, ord = 3L, derivs = 2L, val_fraction = NULL, positive = NULL, seed = NULL,
-      envir = private$p_envir, random_intercept = TRUE, random_intercept_df = 2) {
+      envir = parent.frame(), random_intercept = TRUE, random_intercept_df = 2) {
+      #envir = private$p_envir, random_intercept = TRUE, random_intercept_df = 2) {
 
       checkSymbol(symbol)
 
@@ -257,14 +258,14 @@ ClientModel = R6Class("ClientModel",
     #' Re-set the penalty terms.
     #' @param ll_pen (`list()`)\cr
     #'   Named list with new penalty terms.
-    #' @param anistrop (`logical(1L)`)\cr
-    #'   Flag indicating whether the penalty should be done anistrop or isotrop.
+    #' @param anisotrop (`logical(1L)`)\cr
+    #'   Flag indicating whether the penalty should be done anisotrop or isotrop.
     #' @param simple (`logical(1L)`)\cr
     #'   Flag indicating that just the penalty is updated but no tensor operation is applied.
     #' @param update_random_intercept (`logical(1L)`)\cr
     #'   Flag indicating whether the random intercept penalty should also get updated or not.
-    updatePenalty = function(ll_pen, anistrop = TRUE, simple = FALSE, update_random_intercept = FALSE) {
-      checkmate::assertLogical(x = anistrop, len = 1L, any.missing = FALSE)
+    updatePenalty = function(ll_pen, anisotrop = TRUE, simple = FALSE, update_random_intercept = FALSE) {
+      checkmate::assertLogical(x = anisotrop, len = 1L, any.missing = FALSE)
       if (simple) {
         checkmate::assertList(ll_pen)
 
@@ -277,10 +278,10 @@ ClientModel = R6Class("ClientModel",
         nuisance = lapply(blnames, checkmate::assertChoice, choices = blnames0)
 
         for (bln in blnames) {
-          private$p_bls[[bln]]$updatePenalty(ll_pen[[bln]], anistrop, simple)
+          private$p_bls[[bln]]$updatePenalty(ll_pen[[bln]], anisotrop, simple)
         }
       } else {
-        if (! anistrop) {
+        if (! anisotrop) {
           checkmate::assertList(ll_pen)
 
           blnames = names(ll_pen)
@@ -293,7 +294,7 @@ ClientModel = R6Class("ClientModel",
           nuisance = lapply(blnames, checkmate::assertChoice, choices = blnames0)
 
           for (bln in blnames) {
-            private$p_bls[[bln]]$updatePenalty(ll_pen[[bln]], anistrop, simple)
+            private$p_bls[[bln]]$updatePenalty(ll_pen[[bln]], anisotrop, simple)
           }
         } else {
           checkmate::assertNumeric(ll_pen)
@@ -303,7 +304,7 @@ ClientModel = R6Class("ClientModel",
             blnames = setdiff(blnames, "random_intercept")
 
           for (bln in blnames) {
-            private$p_bls[[bln]]$updatePenalty(ll_pen, anistrop, simple)
+            private$p_bls[[bln]]$updatePenalty(ll_pen, anisotrop, simple)
           }
         }
       }
@@ -317,7 +318,7 @@ ClientModel = R6Class("ClientModel",
       checkmate::assertList(ll_init)
 
       if (private$p_random_intercept) {
-        sn = get(".SNAME", envir = private$p_envir)
+        sn = get("SNAME", envir = private$p_envir)
         x = rep(sn, private$p_n)
 
         tab = ll_init$random_intercept$table

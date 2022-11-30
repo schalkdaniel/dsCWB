@@ -63,7 +63,7 @@ Creates a new instance of this [R6][R6::R6Class] class.
   val_fraction = NULL,
   positive = NULL,
   seed = NULL,
-  envir = private$p_envir,
+  envir = parent.frame(),
   random_intercept = TRUE,
   random_intercept_df = 2
 )}\if{html}{\out{</div>}}
@@ -300,7 +300,7 @@ Re-set the penalty terms.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{ClientModel$updatePenalty(
   ll_pen,
-  anistrop = TRUE,
+  anisotrop = TRUE,
   simple = FALSE,
   update_random_intercept = FALSE
 )}\if{html}{\out{</div>}}
@@ -312,8 +312,8 @@ Re-set the penalty terms.
 \item{\code{ll_pen}}{(`list()`)\cr
 Named list with new penalty terms.}
 
-\item{\code{anistrop}}{(`logical(1L)`)\cr
-Flag indicating whether the penalty should be done anistrop or isotrop.}
+\item{\code{anisotrop}}{(`logical(1L)`)\cr
+Flag indicating whether the penalty should be done anisotrop or isotrop.}
 
 \item{\code{simple}}{(`logical(1L)`)\cr
 Flag indicating that just the penalty is updated but no tensor operation is applied.}

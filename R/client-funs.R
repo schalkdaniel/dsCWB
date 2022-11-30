@@ -82,14 +82,14 @@ getRisk = function(model_symbol, risk_type = "train") {
 #'   The name of the model at the server.
 #' @param ll_pen_binary (`character(1L)`)\cr
 #'   Named list with new penalty terms encoded by `encodeObject`.
-#' @param anistrop (`logical(1L)`)\cr
-#'   Flag indicating whether the penalty should be done anistrop or isotrop.
+#' @param anisotrop (`logical(1L)`)\cr
+#'   Flag indicating whether the penalty should be done anisotrop or isotrop.
 #' @param simple (`logical(1L)`)\cr
 #'   Flag indicating that just the penalty is updated but no tensor operation is applied.
 #' @param update_random_intercept (`logical(1L)`)\cr
 #'   Flag indicating whether the random intercept penalty should also get updated or not.
 #' @export
-updateClientPenalty = function(model_symbol, ll_pen_binary, anistrop = TRUE, simple = FALSE,
+updateClientPenalty = function(model_symbol, ll_pen_binary, anisotrop = TRUE, simple = FALSE,
   update_random_intercept = FALSE) {
   checkmate::assertCharacter(model_symbol, len = 1L, any.missing = FALSE)
   checkmate::assertCharacter(ll_pen_binary, len = 1L, any.missing = FALSE)
@@ -98,7 +98,7 @@ updateClientPenalty = function(model_symbol, ll_pen_binary, anistrop = TRUE, sim
   if (simple) {
     checkmate::assertList(ll_pen)
   } else {
-    if (anistrop) {
+    if (anisotrop) {
       checkmate::assertNumeric(ll_pen, len = 1L, any.missing = FALSE)
     } else {
       checkmate::assertList(ll_pen)

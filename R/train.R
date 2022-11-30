@@ -241,9 +241,9 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
   checkmate::assertCount(x = force_shared_iters, null.ok = TRUE)
 
   if (random_intercept) {
-    cnms = names(ds.names(symbol, connections))
+    cnms = names(dsBaseClient::ds.names(symbol, connections))
     for (i in seq_along(connections)) {
-      ds.make(transChar(cnms[i]), ".SNAME", connections[i])
+      dsBaseClient::ds.make(transChar(cnms[i]), "SNAME", connections[i])
     }
   }
 
@@ -345,7 +345,7 @@ dsCWB = function(connections, symbol, target = NULL, feature_names, mstop = 100L
     penalty_global$random_intercept = pri
   }
   eval(parse(text = paste0("cl_pen_update = quote(updateClientPenalty(", mchar, ", ",
-    transChar(encodeObject(penalty_global)), ", anistrop = FALSE, simple = TRUE, update_random_intercept = TRUE))")))
+    transChar(encodeObject(penalty_global)), ", anisotrop = FALSE, simple = TRUE, update_random_intercept = TRUE))")))
   datashield.assign(connections, model_symbol, cl_pen_update)
 
   eval(parse(text = paste0("cl_pen_update = quote(updateClientPenalty(", mchar, ", ",

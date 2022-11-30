@@ -263,11 +263,11 @@ BlSpline = R6Class("BlSpline",
     #' Re-set the penalty terms.
     #' @param pen (`numeric(1)`)\cr
     #'   New penalty terms.
-    #' @param anistrop (`logical(1L)`)\cr
-    #'   Flag indicating whether the penalty should be done anistrop or isotrop.
+    #' @param anisotrop (`logical(1L)`)\cr
+    #'   Flag indicating whether the penalty should be done anisotrop or isotrop.
     #' @param simple (`logical(1L)`)\cr
     #'   Flag indicating that just the penalty is updated but no tensor operation is applied.
-    updatePenalty = function(pen, anistrop = TRUE, simple = FALSE) {
+    updatePenalty = function(pen, anisotrop = TRUE, simple = FALSE) {
       checkmate::assertNumeric(pen, len = 1L, lower = 0, any.missing = FALSE)
 
       if (simple) {
@@ -275,7 +275,7 @@ BlSpline = R6Class("BlSpline",
         private$p_xtx_inv = solve(private$p_xtx + pnew)
         private$p_penalty = pen
       } else {
-        if (anistrop) {
+        if (anisotrop) {
           p0 = pen * diag(ncol(private$p_penmat))
           pnew = private$p_penalty * private$p_penmat + p0
           private$p_xtx_inv = solve(private$p_xtx + pnew)
@@ -596,18 +596,18 @@ BlOneHot = R6Class("BlOneHot",
     #' Re-set the penalty terms.
     #' @param pen (`numeric(1)`)\cr
     #'   New penalty terms.
-    #' @param anistrop (`logical(1L)`)\cr
-    #'   Flag indicating whether the penalty should be done anistrop or isotrop.
+    #' @param anisotrop (`logical(1L)`)\cr
+    #'   Flag indicating whether the penalty should be done anisotrop or isotrop.
     #' @param simple (`logical(1L)`)\cr
     #'   Flag indicating that just the penalty is updated but no tensor operation is applied.
-    updatePenalty = function(pen, anistrop = TRUE, simple = FALSE) {
+    updatePenalty = function(pen, anisotrop = TRUE, simple = FALSE) {
       checkmate::assertNumeric(pen, len = 1L, lower = 0, any.missing = FALSE)
       if (simple) {
         pnew = pen * private$p_penmat
         private$p_xtx_inv = solve(private$p_xtx + pnew)
         private$p_penalty = pen
       } else {
-        if (anistrop) {
+        if (anisotrop) {
           p0 = pen * diag(ncol(private$p_penmat))
           pnew = private$p_penalty * private$p_penmat + p0
           private$p_penmat = pnew

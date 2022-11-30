@@ -7,7 +7,7 @@
 updateClientPenalty(
   model_symbol,
   ll_pen_binary,
-  anistrop = TRUE,
+  anisotrop = TRUE,
   simple = FALSE,
   update_random_intercept = FALSE
 )
@@ -19,8 +19,8 @@ The name of the model at the server.}
 \item{ll_pen_binary}{(`character(1L)`)\cr
 Named list with new penalty terms encoded by `encodeObject`.}
 
-\item{anistrop}{(`logical(1L)`)\cr
-Flag indicating whether the penalty should be done anistrop or isotrop.}
+\item{anisotrop}{(`logical(1L)`)\cr
+Flag indicating whether the penalty should be done anisotrop or isotrop.}
 
 \item{simple}{(`logical(1L)`)\cr
 Flag indicating that just the penalty is updated but no tensor operation is applied.}

@@ -23,7 +23,9 @@ test_that("client model initializes correctly", {
   symbol = "iris"
   target = "Sepal.Width"
   learning_rate = 0.1
-  cm = expect_silent(ClientModel$new(symbol, target, learning_rate = learning_rate))
+
+  cm = expect_silent(ClientModel$new(symbol, target, learning_rate = learning_rate,
+    random_intercept = FALSE))
 
   expect_silent(cm$initConstantModel(cm$getLossOptimalConstant()))
   expect_equal(cm$getPrediction(), rep(mean(iris[[target]]), nrow(iris)))
@@ -68,7 +70,7 @@ test_that("client model initializes correctly", {
   pennew[[2]] = 2
   pennew[[3]] = 3
   pennew[[4]] = 1
-  expect_silent(cm$updatePenalty(pennew))
+  expect_silent(cm$updatePenalty(pennew, simple = TRUE))
   expect_equal(cm$bls[[1]]$getHyperpars()$penalty, 1)
   expect_equal(cm$bls[[2]]$getHyperpars()$penalty, 2)
   expect_equal(cm$bls[[3]]$getHyperpars()$penalty, 3)
@@ -136,6 +138,12 @@ test_that("client model generation works on DataSHIELD server", {
 
     call_init = paste0("initClientModel(\"cm\", \"", encodeObject(cli), "\")")
     eval(parse(text = paste0("cq = quote(", call_init, ")")))
+
+    cnms = names(dsBaseClient::ds.names("dat", connections))
+    for (i in seq_along(connections)) {
+      dsBaseClient::ds.make(sprintf("\"%s\"", cnms[i]), "SNAME", connections[i])
+    }
+
     expect_silent(suppressMessages(datashield.assign(connections, "cm", cq)))
 
     cinit = expect_silent(suppressMessages(datashield.aggregate(connections, quote(getOptimalConstant("cm")))))
