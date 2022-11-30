@@ -13,7 +13,7 @@ test_that("Quadratic loss works correctly", {
 
   oc = mean(tr)
   ol = l$init(tr)
-  expect_equal(round(oc, 4), round(ol, 4))
+  expect_equal(round(oc, 2), round(ol, 2))
 
   trs = list(tr[1:34], tr[35:80], tr[81:100])
   inits = sapply(trs, l$init)
@@ -45,7 +45,7 @@ test_that("Binomial loss works correctly", {
 
   oc = optimize(function(x) l$risk(tr, x), lower = -2, upper = 2)$minimum
   ol = log(l$init(tr) / (1 - l$init(tr)))
-  expect_equal(round(oc, 4), round(ol, 4))
+  expect_equal(round(oc, 2), round(ol, 2))
 
   trs = list(tr[1:34], tr[35:80], tr[81:100])
   inits = sapply(trs, l$init)
