@@ -8,11 +8,15 @@ output: github_document
 options(width = 80)
 
 knitr::opts_chunk$set(
+  eval = FALSE,
   collapse = TRUE,
   comment = "#>",
   fig.path = "Readme_files/"
 )
 
+```
+
+```{r}
 pkgs = c("here", "opalr", "DSI", "DSOpal", "dsBaseClient")
 for (pkg in pkgs) {
   if (! requireNamespace(pkg, quietly = TRUE))
@@ -62,8 +66,9 @@ Note that the package needs to be installed at both locations, the server and th
 
 ## Usage
 
+### Log into DataSHIELD
+
 ```{r}
-devtools::load_all()
 
 library(DSI)
 library(DSOpal)
@@ -84,13 +89,15 @@ for (i in seq_len(3L)) {
   )
 }
 connections = datashield.login(logins = builder$build(), assign = TRUE)
-datashield.symbols(connections)
+```
 
+### Fit distributed component-wise boosting
+
+```{r}
+library(dsCWB)
+
+#Remove all missings:
 datashield.assign(connections, "Dclean", quote(dsNaRm("D")))
-datashield.symbols(connections)
-
-dsBaseClient::ds.dim("D")
-dsBaseClient::ds.dim("Dclean")
 
 symbol = "Dclean"
 target = "LAB_TSC"
