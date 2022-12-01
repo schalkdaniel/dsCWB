@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 ```
 
-```{r}
+```{r, include=FALSE}
 pkgs = c("here", "opalr", "DSI", "DSOpal", "dsBaseClient")
 for (pkg in pkgs) {
   if (! requireNamespace(pkg, quietly = TRUE))
