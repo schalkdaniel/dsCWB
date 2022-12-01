@@ -1,32 +1,6 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-``` r
-pkgs = c("here", "opalr", "DSI", "DSOpal", "dsBaseClient")
-for (pkg in pkgs) {
-  if (! requireNamespace(pkg, quietly = TRUE))
-    install.packages(pkg, repos = c(getOption("repos"), "https://cran.obiba.org"))
-}
-devtools::install(quiet = TRUE, upgrade = "always")
-
-## Install packages on the DataSHIELD test machine:
-surl     = "https://opal-demo.obiba.org/"
-username = "administrator"
-password = "password"
-
-opal = opalr::opal.login(username = username, password = password, url = surl)
-
-check1 = opalr::dsadmin.install_github_package(opal = opal, pkg = "dsCWB", username = "schalkdaniel", ref = "main")
-if (! check1)
-  stop("[", Sys.time(), "] Was not able to install dsCWB!")
-
-check2 = opalr::dsadmin.publish_package(opal = opal, pkg = "dsCWB")
-if (! check2)
-  stop("[", Sys.time(), "] Was not able to publish methods of dsCWB!")
-
-opalr::opal.logout(opal = opal)
-```
-
 [![Actions
 Status](https://github.com/schalkdaniel/dsCWB/workflows/R-CMD-check/badge.svg)](https://github.com/schalkdaniel/dsCWB/actions)
 [![License: LGPL
